@@ -377,13 +377,10 @@
 
     <!-- Step 1: password gate -->
     <div class="admin-step active" id="adminGateStep">
-      <div class="auth-error" id="adminGateError"></div>
-      <div class="field">
-        <label>رمز الدخول الخاص بالمعلمة</label>
-        <input type="password" id="adminPassInput" placeholder="أدخلي رمز الإدارة">
+      <div style="text-align:center; padding:10px 0; color:var(--ink-soft);">
+        <p style="margin-bottom:16px;">لوحة الإدارة متاحة فقط لحساب المعلمة. سجّلي الدخول من زر "سجلي الآن" أعلى الصفحة باسم المستخدم <b>admin</b> وكلمة مرورك، ثم افتحي هذه اللوحة مرة أخرى.</p>
+        <button class="btn-primary" onclick="closeAdmin(); openAuth('login');">تسجيل الدخول كمعلمة</button>
       </div>
-      <button class="btn-primary" onclick="checkAdminPass()">دخول للوحة</button>
-      <p class="auth-hint">الرمز الافتراضي للتجربة: <b>1234</b> — غيّريه من الكود قبل نشر الموقع فعليًا.</p>
     </div>
 
     <!-- Step 2: manage lessons -->
@@ -832,6 +829,10 @@
   import {
     getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCcpntSQe5AIi66F5EshrP5rNStK0k9x1A",
@@ -844,6 +845,7 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
   window.fbDB = db;
   window.fbDoc = doc;
@@ -852,6 +854,20 @@
   window.fbUpdateDoc = updateDoc;
   window.fbCollection = collection;
   window.fbGetDocs = getDocs;
+
+  window.fbAuth = auth;
+  window.fbCreateUser = createUserWithEmailAndPassword;
+  window.fbSignIn = signInWithEmailAndPassword;
+  window.fbSignOut = signOut;
+  window.fbCurrentUser = null;
+  window.fbAuthReady = false;
+
+  onAuthStateChanged(auth, (user) => {
+    window.fbCurrentUser = user;
+    window.fbAuthReady = true;
+    window.dispatchEvent(new Event('firebase-auth-changed'));
+  });
+
   window.fbReady = true;
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
@@ -864,6 +880,32 @@
       window.addEventListener('firebase-ready', () => resolve(), {once:true});
     });
   }
+  function waitForAuthReady(){
+    return new Promise(resolve => {
+      if(window.fbAuthReady) return resolve();
+      window.addEventListener('firebase-auth-changed', () => resolve(), {once:true});
+    });
+  }
+
+  // ===== Real Firebase Authentication (replaces the old localStorage-based accounts) =====
+  const TEACHER_UID = 'KEZbGTEV3xT0e5G8JGjKsZvxf3u2'; // حساب المعلمة الإداري في Firebase
+  function usernameToEmail(username){
+    if(username === 'admin') return 'admin@alkeemiya-albasita.com';
+    return username + '@students.alkeemiya-albasita.com';
+  }
+  function isCurrentUserTeacher(){
+    return !!(window.fbCurrentUser && window.fbCurrentUser.uid === TEACHER_UID);
+  }
+  function getCurrentUsername(){
+    // مشتقة من بريد الحساب الداخلي، للعرض والتخزين فقط
+    const user = window.fbCurrentUser;
+    if(!user || !user.email) return null;
+    return user.email.split('@')[0];
+  }
+  function getCurrentUid(){
+    return window.fbCurrentUser ? window.fbCurrentUser.uid : null;
+  }
+
   async function fsGetDoc(collectionName, docId){
     await waitForFirebase();
     const snap = await window.fbGetDoc(window.fbDoc(window.fbDB, collectionName, docId));
@@ -915,18 +957,16 @@
     this.reset();
   });
 
-  // ===== Auth system (backed by Firebase Firestore — shared across all devices) =====
-  const AUTH_SESSION_KEY = 'chem_simple_session'; // session itself stays local per device, as normal for login sessions
+  // ===== Auth system (backed by real Firebase Authentication) =====
 
-  async function getUserByUsername(username){
-    return await fsGetDoc('users', username);
+  async function saveProfile(uid, name, username){
+    await fsSetDoc('profiles', uid, {name, username});
   }
-  async function saveUser(userObj){
-    await fsSetDoc('users', userObj.username, userObj);
+  async function getProfile(uid){
+    return await fsGetDoc('profiles', uid);
   }
-  async function getAllUsers(){
-    const all = await fsGetAllDocs('users');
-    return Object.values(all);
+  async function getAllProfiles(){
+    return await fsGetAllDocs('profiles');
   }
 
   function openAuth(tab){
@@ -960,14 +1000,23 @@
     document.getElementById('authSuccess').style.display = 'none';
   }
 
+  function firebaseAuthErrorToArabic(err){
+    const code = (err && err.code) || '';
+    if(code.includes('email-already-in-use')) return 'اسم المستخدم هذا مسجّل مسبقًا. جرّبي تسجيل الدخول.';
+    if(code.includes('weak-password')) return 'كلمة المرور ضعيفة، اختاري كلمة أقوى (٦ أحرف على الأقل).';
+    if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+    if(code.includes('invalid-email')) return 'اسم المستخدم يحتوي على رموز غير مقبولة، استخدمي حروفًا وأرقامًا فقط.';
+    return 'حدث خطأ غير متوقع، حاولي مرة أخرى.';
+  }
+
   async function handleSignup(e){
     e.preventDefault();
     const name = document.getElementById('suName').value.trim();
     const username = document.getElementById('suUsername').value.trim().toLowerCase().replace(/\s+/g, '');
     const pass = document.getElementById('suPass').value;
 
-    if(!username){
-      showAuthError('الرجاء كتابة اسم مستخدم.');
+    if(!username || username === 'admin'){
+      showAuthError('الرجاء كتابة اسم مستخدم صالح.');
       return false;
     }
     if(pass.length < 6){
@@ -975,15 +1024,15 @@
       return false;
     }
     showAuthSuccess('جارٍ إنشاء الحساب...');
-    const existing = await getUserByUsername(username);
-    if(existing){
-      showAuthError('اسم المستخدم هذا مسجّل مسبقًا. جرّبي تسجيل الدخول.');
-      return false;
+    await waitForFirebase();
+    try{
+      const cred = await window.fbCreateUser(window.fbAuth, usernameToEmail(username), pass);
+      await saveProfile(cred.user.uid, name, username);
+      showAuthSuccess('تم إنشاء حسابك بنجاح، أهلًا بك! ✓');
+      setTimeout(closeAuth, 900);
+    }catch(err){
+      showAuthError(firebaseAuthErrorToArabic(err));
     }
-    await saveUser({name, username, pass: btoa(pass)});
-    startSession({name, username});
-    showAuthSuccess('تم إنشاء حسابك بنجاح، أهلًا بك! ✓');
-    setTimeout(closeAuth, 900);
     return false;
   }
 
@@ -993,58 +1042,56 @@
     const pass = document.getElementById('liPass').value;
 
     showAuthSuccess('جارٍ التحقق...');
-    const user = await getUserByUsername(username);
-
-    if(!user || user.pass !== btoa(pass)){
-      showAuthError('اسم المستخدم أو كلمة المرور غير صحيحة.');
-      return false;
+    await waitForFirebase();
+    try{
+      await window.fbSignIn(window.fbAuth, usernameToEmail(username), pass);
+      showAuthSuccess('تم تسجيل الدخول بنجاح ✓');
+      setTimeout(closeAuth, 900);
+    }catch(err){
+      showAuthError(firebaseAuthErrorToArabic(err));
     }
-    startSession({name:user.name, username:user.username});
-    showAuthSuccess('تم تسجيل الدخول بنجاح ✓');
-    setTimeout(closeAuth, 900);
     return false;
   }
 
-  function startSession(user){
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
-    renderAuthState();
-    if(typeof renderProgressSection === 'function') renderProgressSection();
-  }
-  function logout(){
-    localStorage.removeItem(AUTH_SESSION_KEY);
-    renderAuthState();
-    if(typeof renderProgressSection === 'function') renderProgressSection();
-    document.getElementById('userMenuOpen') && closeUserMenu();
+  async function logout(){
+    await waitForFirebase();
+    await window.fbSignOut(window.fbAuth);
   }
   function toggleUserMenu(){
     if(confirm('تسجيل الخروج من حسابك؟')) logout();
   }
 
-  function renderAuthState(){
-    const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || 'null');
+  async function renderAuthState(){
     const navBtn = document.getElementById('navAuthBtn');
     const chip = document.getElementById('userChip');
-    if(session){
+    const uid = getCurrentUid();
+    if(uid){
+      const profile = await getProfile(uid);
+      const displayName = (profile && profile.name) || getCurrentUsername() || 'م';
       navBtn.style.display = 'none';
       chip.style.display = 'inline-flex';
-      document.getElementById('userAvatar').textContent = session.name.trim().charAt(0) || 'م';
-      document.getElementById('userNameLabel').textContent = 'مرحبًا، ' + session.name.split(' ')[0];
+      document.getElementById('userAvatar').textContent = displayName.trim().charAt(0) || 'م';
+      document.getElementById('userNameLabel').textContent = 'مرحبًا، ' + displayName.split(' ')[0];
     }else{
       navBtn.style.display = 'inline-block';
       chip.style.display = 'none';
     }
   }
-  renderAuthState();
 
-  // ===== Admin panel: add/manage lessons (shared via Firestore across all devices) =====
-  const ADMIN_PASS = '1234'; // ⚠️ غيّري هذا الرمز قبل استخدام الموقع فعليًا
-  let adminUnlocked = false;
+  window.addEventListener('firebase-auth-changed', () => {
+    renderAuthState();
+    if(typeof renderProgressSection === 'function') renderProgressSection();
+    if(typeof applyLessonLocks === 'function') applyLessonLocks();
+  });
+
+  // ===== Admin panel: add/manage lessons (shared via Firestore, protected by TEACHER_UID) =====
 
   function openAdmin(){
+    const isTeacher = isCurrentUserTeacher();
     document.getElementById('adminOverlay').classList.add('open');
-    document.getElementById('adminGateStep').classList.toggle('active', !adminUnlocked);
-    document.getElementById('adminFormStep').classList.toggle('active', adminUnlocked);
-    if(adminUnlocked){ renderAdminList(); populateLessonSelect(); populateQuizSelect(); renderQuizAdminList(); renderAdminReleaseList(); }
+    document.getElementById('adminGateStep').classList.toggle('active', !isTeacher);
+    document.getElementById('adminFormStep').classList.toggle('active', isTeacher);
+    if(isTeacher){ renderAdminList(); populateLessonSelect(); populateQuizSelect(); renderQuizAdminList(); renderAdminReleaseList(); }
   }
   function closeAdmin(){ document.getElementById('adminOverlay').classList.remove('open'); }
 
@@ -1080,25 +1127,6 @@
       return;
     }
     successEl.style.display = 'block';
-  }
-
-  function checkAdminPass(){
-    const val = document.getElementById('adminPassInput').value;
-    if(val === ADMIN_PASS){
-      adminUnlocked = true;
-      document.getElementById('adminGateStep').classList.remove('active');
-      document.getElementById('adminFormStep').classList.add('active');
-      document.getElementById('adminGateError').style.display = 'none';
-      renderAdminList();
-      populateLessonSelect();
-      populateQuizSelect();
-      renderQuizAdminList();
-      renderAdminReleaseList();
-      applyLessonLocks();
-    }else{
-      const err = document.getElementById('adminGateError');
-      err.textContent = 'رمز الدخول غير صحيح.'; err.style.display = 'block';
-    }
   }
 
   // ===== Standalone quizzes: "الاختبارات" + "التحصيلي" sections (shared via Firestore) =====
@@ -1418,7 +1446,7 @@
         card.classList.remove('locked-lesson');
         btn.textContent = 'ابدئي الدرس ›';
         btn.disabled = false;
-      }else if(adminUnlocked){
+      }else if(isCurrentUserTeacher()){
         card.classList.remove('locked-lesson');
         btn.textContent = '🔒 معاينة (مقفل للطالبات)';
         btn.disabled = false;
@@ -1454,34 +1482,30 @@
   let currentLessonMaxTime = 0;
   let videoWatchedEnough = false;
 
-  async function getStudentProgress(username){
-    const data = await fsGetDoc('progress', username);
+  async function getStudentProgress(uid){
+    const data = await fsGetDoc('progress', uid);
     return data || {};
   }
-  async function updateStudentLesson(username, lessonId, patch){
-    const current = await getStudentProgress(username);
+  async function updateStudentLesson(uid, lessonId, patch){
+    const current = await getStudentProgress(uid);
     const merged = Object.assign({}, current[lessonId] || {}, patch);
-    await fsSetDoc('progress', username, {[lessonId]: merged});
+    await fsSetDoc('progress', uid, {[lessonId]: merged});
     return merged;
   }
   async function getAllProgress(){
     return await fsGetAllDocs('progress');
   }
-  function getCurrentUsername(){
-    const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || 'null');
-    return session ? session.username : null;
-  }
 
   async function resetMyProgress(){
-    const username = getCurrentUsername();
+    const uid = getCurrentUid();
     const successEl = document.getElementById('resetSuccess');
-    if(!username){
+    if(!uid){
       successEl.textContent = 'يجب تسجيل الدخول أولًا حتى يكون هناك تقدّم لتصفيره.';
       successEl.style.display = 'block';
       return;
     }
     await waitForFirebase();
-    await window.fbSetDoc(window.fbDoc(window.fbDB, 'progress', username), {});
+    await window.fbSetDoc(window.fbDoc(window.fbDB, 'progress', uid), {});
     if(typeof renderProgressSection === 'function') renderProgressSection();
     successEl.textContent = 'تم تصفير تقدمك بالكامل ✓ — كل الدروس رجعت لحالة "لم تبدأ بعد".';
     successEl.style.display = 'block';
@@ -1490,7 +1514,7 @@
   async function openLessonViewer(lessonId){
     const meta = LESSONS_META[lessonId];
     if(!meta) return;
-    if(!(await isLessonReleased(lessonId)) && !adminUnlocked) return; // الدرس ما زال مقفلًا
+    if(!(await isLessonReleased(lessonId)) && !isCurrentUserTeacher()) return; // الدرس ما زال مقفلًا
     currentLessonId = lessonId;
     currentLessonMaxTime = 0;
     videoWatchedEnough = false;
@@ -1498,13 +1522,13 @@
     document.getElementById('viewerTitle').textContent = meta.title;
     document.getElementById('viewerOverlay').classList.add('open');
 
-    const username = getCurrentUsername();
-    document.getElementById('viewerLoggedOut').style.display = username ? 'none' : 'block';
-    document.getElementById('viewerBody').style.display = username ? 'block' : 'none';
-    if(!username) return;
+    const uid = getCurrentUid();
+    document.getElementById('viewerLoggedOut').style.display = uid ? 'none' : 'block';
+    document.getElementById('viewerBody').style.display = uid ? 'block' : 'none';
+    if(!uid) return;
 
     // check earlier progress
-    const studentProgress = await getStudentProgress(username);
+    const studentProgress = await getStudentProgress(uid);
     const userProgress = studentProgress[lessonId] || {};
     videoWatchedEnough = !!userProgress.watched;
 
@@ -1565,9 +1589,9 @@
   async function markVideoWatched(lessonId){
     videoWatchedEnough = true;
     unlockOrLockQuiz();
-    const username = getCurrentUsername();
-    if(!username) return;
-    await updateStudentLesson(username, lessonId, {watched:true});
+    const uid = getCurrentUid();
+    if(!uid) return;
+    await updateStudentLesson(uid, lessonId, {watched:true});
   }
 
   function unlockOrLockQuiz(){
@@ -1607,12 +1631,12 @@
       if(picked && parseInt(picked.value) === qItem.correct) score++;
     });
     const total = meta.questions.length;
-    const username = getCurrentUsername();
+    const uid = getCurrentUid();
     const resultEl = document.getElementById('viewerResult');
     resultEl.style.display = 'block';
     resultEl.textContent = 'نتيجتك: ' + score + ' من ' + total + (score === total ? ' — ممتاز! ✓' : ' — راجعي الفيديو وحاولي مرة أخرى.');
-    if(username){
-      await updateStudentLesson(username, currentLessonId, {watched:true, score, total, completed: score === total});
+    if(uid){
+      await updateStudentLesson(uid, currentLessonId, {watched:true, score, total, completed: score === total});
       renderProgressSection();
     }
   }
@@ -1627,10 +1651,10 @@
   }
 
   async function renderProgressSection(){
-    const username = getCurrentUsername();
+    const uid = getCurrentUid();
     const loggedOut = document.getElementById('progressLoggedOut');
     const tableWrap = document.getElementById('progressTableWrap');
-    if(!username){
+    if(!uid){
       loggedOut.style.display = 'block';
       tableWrap.style.display = 'none';
       return;
@@ -1638,7 +1662,7 @@
     loggedOut.style.display = 'none';
     tableWrap.style.display = 'block';
 
-    const userProgress = await getStudentProgress(username);
+    const userProgress = await getStudentProgress(uid);
     const grid = document.getElementById('progressGrid');
     grid.innerHTML = '';
 
@@ -1669,20 +1693,23 @@
   }
   async function initFirestoreDependentUI(){
     await waitForFirebase();
+    await waitForAuthReady();
     await applySavedVideoUrls();
     renderExtraLessons();
+    renderAuthState();
     renderProgressSection();
     applyLessonLocks();
   }
   initFirestoreDependentUI();
 
   async function getAllStudentsSorted(){
-    const users = await getAllUsers(); // [{name, username, pass}, ...]
-    const progress = await getAllProgress(); // {username: {l1:{...}, ...}, ...}
-    const list = Object.keys(progress).map(username => {
-      const user = users.find(u => u.username === username);
-      const name = user ? user.name : username;
-      const gradeInfo = computeStudentGrade(progress[username]);
+    const profiles = await getAllProfiles(); // {uid: {name, username}, ...}
+    const progress = await getAllProgress(); // {uid: {l1:{...}, ...}, ...}
+    const list = Object.keys(progress).map(uid => {
+      const profile = profiles[uid];
+      const name = profile ? profile.name : (profile && profile.username) || uid;
+      const username = profile ? profile.username : uid;
+      const gradeInfo = computeStudentGrade(progress[uid]);
       return {name, username, grade: gradeInfo.grade, completedCount: gradeInfo.completedCount, total: gradeInfo.total};
     });
     list.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
@@ -1727,9 +1754,10 @@
   }
 
   async function openPrintReport(){
-    const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || 'null');
-    if(!session) return;
-    const progress = await getStudentProgress(session.username);
+    const uid = getCurrentUid();
+    if(!uid) return;
+    const profile = await getProfile(uid);
+    const progress = await getStudentProgress(uid);
     const gradeInfo = computeStudentGrade(progress);
 
     let rowsHtml = '';
@@ -1744,8 +1772,8 @@
     const today = new Date().toLocaleDateString('ar-SA');
     document.getElementById('printReportContent').innerHTML =
       '<h2>تقرير درجة الأنشطة الصفية — الكيمياء البسيطة</h2>' +
-      '<p><b>اسم الطالبة:</b> ' + session.name + '</p>' +
-      '<p><b>اسم المستخدم:</b> ' + session.username + '</p>' +
+      '<p><b>اسم الطالبة:</b> ' + (profile ? profile.name : '') + '</p>' +
+      '<p><b>اسم المستخدم:</b> ' + getCurrentUsername() + '</p>' +
       '<p><b>التاريخ:</b> ' + today + '</p>' +
       '<table style="width:100%; border-collapse:collapse; margin:16px 0;">' +
       '<thead><tr><th style="border:1px solid #ccc; padding:6px;">الدرس</th><th style="border:1px solid #ccc; padding:6px;">الحالة</th><th style="border:1px solid #ccc; padding:6px;">نتيجة الاختبار</th></tr></thead>' +
