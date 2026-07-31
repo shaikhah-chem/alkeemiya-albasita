@@ -457,6 +457,43 @@
 
       <hr style="border:none; border-top:1px solid var(--border); margin:8px 0;">
 
+      <h3 style="font-size:1rem; color:var(--blue-deep);">الأنشطة العلاجية والإثرائية لكل درس</h3>
+      <p class="auth-hint" style="text-align:right;">أضيفي فيديو و/أو ملف PDF لكل درس، يظهران كأيقونات على بطاقة الدرس مباشرة.</p>
+      <div class="field">
+        <label>اختاري الدرس</label>
+        <select id="actLessonSelect" style="width:100%; padding:13px 16px; border-radius:10px; border:1.5px solid var(--border); font-family:'Tajawal'; background:var(--bg);"></select>
+      </div>
+
+      <h4 style="font-size:.92rem; color:var(--blue-deep); margin-top:10px;">🩹 نشاط علاجي</h4>
+      <div class="field"><label>رابط فيديو مباشر (اختياري)</label><input type="url" id="remVideoUrl" placeholder="https://example.com/remedial.mp4"></div>
+      <div class="field"><label>أو ارفعي فيديو من جهازك — معاينة مؤقتة فقط</label><input type="file" id="remVideoFile" accept="video/*"></div>
+      <div class="field"><label>رابط ملف PDF (اختياري)</label><input type="url" id="remFileUrl" placeholder="https://example.com/remedial.pdf"></div>
+      <div class="field"><label>أو ارفعي ملف PDF من جهازك — معاينة مؤقتة فقط</label><input type="file" id="remFileFile" accept="application/pdf"></div>
+      <button class="btn-secondary" onclick="saveActivity('remedial')">حفظ النشاط العلاجي</button>
+      <div class="auth-success" id="remActSuccess" style="display:none;"></div>
+
+      <h4 style="font-size:.92rem; color:var(--turquoise-dark); margin-top:16px;">🌟 نشاط إثرائي</h4>
+      <div class="field"><label>رابط فيديو مباشر (اختياري)</label><input type="url" id="enrVideoUrl" placeholder="https://example.com/enrichment.mp4"></div>
+      <div class="field"><label>أو ارفعي فيديو من جهازك — معاينة مؤقتة فقط</label><input type="file" id="enrVideoFile" accept="video/*"></div>
+      <div class="field"><label>رابط ملف PDF (اختياري)</label><input type="url" id="enrFileUrl" placeholder="https://example.com/enrichment.pdf"></div>
+      <div class="field"><label>أو ارفعي ملف PDF من جهازك — معاينة مؤقتة فقط</label><input type="file" id="enrFileFile" accept="application/pdf"></div>
+      <button class="btn-secondary" onclick="saveActivity('enrichment')">حفظ النشاط الإثرائي</button>
+      <div class="auth-success" id="enrActSuccess" style="display:none;"></div>
+
+      <h4 style="font-size:.92rem; color:var(--blue-deep); margin-top:16px;">📝 ورقة عمل</h4>
+      <div class="field"><label>رابط ملف (PDF أو صورة)</label><input type="url" id="wsFileUrl" placeholder="https://example.com/worksheet.pdf"></div>
+      <div class="field"><label>أو ارفعي ملفًا من جهازك — معاينة مؤقتة فقط</label><input type="file" id="wsFileFile" accept="application/pdf,image/*"></div>
+      <button class="btn-secondary" onclick="saveActivity('worksheet')">حفظ ورقة العمل</button>
+      <div class="auth-success" id="wsActSuccess" style="display:none;"></div>
+
+      <h4 style="font-size:.92rem; color:var(--turquoise-dark); margin-top:16px;">🧠 خريطة ذهنية</h4>
+      <div class="field"><label>رابط ملف (PDF أو صورة)</label><input type="url" id="mmFileUrl" placeholder="https://example.com/mindmap.pdf"></div>
+      <div class="field"><label>أو ارفعي ملفًا من جهازك — معاينة مؤقتة فقط</label><input type="file" id="mmFileFile" accept="application/pdf,image/*"></div>
+      <button class="btn-secondary" onclick="saveActivity('mindmap')">حفظ الخريطة الذهنية</button>
+      <div class="auth-success" id="mmActSuccess" style="display:none;"></div>
+
+      <hr style="border:none; border-top:1px solid var(--border); margin:8px 0;">
+
       <h3 style="font-size:1rem; color:var(--blue-deep);">تقرير جميع الطالبات</h3>
       <p class="auth-hint" style="text-align:right;">يعرض كل الطالبات المسجّلات (من أي جهاز)، مرتّبات أبجديًا مع درجاتهن.</p>
       <button class="btn-secondary" onclick="renderAllStudentsReport()">عرض التقرير</button>
@@ -1091,7 +1128,7 @@
     document.getElementById('adminOverlay').classList.add('open');
     document.getElementById('adminGateStep').classList.toggle('active', !isTeacher);
     document.getElementById('adminFormStep').classList.toggle('active', isTeacher);
-    if(isTeacher){ renderAdminList(); populateLessonSelect(); populateQuizSelect(); renderQuizAdminList(); renderAdminReleaseList(); }
+    if(isTeacher){ renderAdminList(); populateLessonSelect(); populateQuizSelect(); renderQuizAdminList(); renderAdminReleaseList(); populateActivityLessonSelect(); }
   }
   function closeAdmin(){ document.getElementById('adminOverlay').classList.remove('open'); }
 
@@ -1127,6 +1164,108 @@
       return;
     }
     successEl.style.display = 'block';
+  }
+
+  // ===== Remedial & Enrichment activities per lesson (video + PDF) =====
+  function populateActivityLessonSelect(){
+    const sel = document.getElementById('actLessonSelect');
+    if(!sel || sel.options.length) return;
+    Object.keys(LESSONS_META).forEach(id => {
+      const opt = document.createElement('option');
+      opt.value = id; opt.textContent = LESSONS_META[id].title;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function saveActivity(type){
+    const id = document.getElementById('actLessonSelect').value;
+    const configs = {
+      remedial: {settingsKey:'remedialActivities', videoField:'remVideoUrl', videoFileField:'remVideoFile', fileField:'remFileUrl', fileFileField:'remFileFile', successEl:'remActSuccess'},
+      enrichment: {settingsKey:'enrichmentActivities', videoField:'enrVideoUrl', videoFileField:'enrVideoFile', fileField:'enrFileUrl', fileFileField:'enrFileFile', successEl:'enrActSuccess'},
+      worksheet: {settingsKey:'worksheets', fileField:'wsFileUrl', fileFileField:'wsFileFile', successEl:'wsActSuccess'},
+      mindmap: {settingsKey:'mindmaps', fileField:'mmFileUrl', fileFileField:'mmFileFile', successEl:'mmActSuccess'}
+    };
+    const cfg = configs[type];
+    const successEl = document.getElementById(cfg.successEl);
+
+    const settings = await getSiteSettings();
+    const map = settings[cfg.settingsKey] || {};
+    const entry = Object.assign({}, map[id]);
+    let localOnly = false;
+
+    if(cfg.videoField){
+      const videoUrl = document.getElementById(cfg.videoField).value.trim();
+      const videoFileInput = document.getElementById(cfg.videoFileField);
+      if(videoFileInput.files && videoFileInput.files[0]){
+        entry.video = URL.createObjectURL(videoFileInput.files[0]);
+        localOnly = true;
+      }else if(videoUrl){
+        entry.video = videoUrl;
+      }
+    }
+
+    const fileUrl = document.getElementById(cfg.fileField).value.trim();
+    const fileFileInput = document.getElementById(cfg.fileFileField);
+    if(fileFileInput.files && fileFileInput.files[0]){
+      entry.file = URL.createObjectURL(fileFileInput.files[0]);
+      localOnly = true;
+    }else if(fileUrl){
+      entry.file = fileUrl;
+    }
+
+    map[id] = entry;
+    await updateSiteSettings({[cfg.settingsKey]: map});
+
+    successEl.textContent = localOnly
+      ? 'تم الحفظ للمعاينة في هذا المتصفح فقط — الملفات المرفوعة محليًا تُفقد عند إعادة تحميل الصفحة. استخدمي رابطًا مباشرًا للنشر الدائم.'
+      : 'تم حفظ النشاط بنجاح ✓';
+    successEl.style.display = 'block';
+    applyActivityLinksToLessonCards();
+  }
+
+  async function applyActivityLinksToLessonCards(){
+    const settings = await getSiteSettings();
+    const remedial = settings.remedialActivities || {};
+    const enrichment = settings.enrichmentActivities || {};
+    const worksheets = settings.worksheets || {};
+    const mindmaps = settings.mindmaps || {};
+    Object.keys(LESSONS_META).forEach(id => {
+      const btn = document.querySelector('.lesson-open-btn[data-lesson="' + id + '"]');
+      if(!btn) return;
+      const card = btn.closest('.card');
+      card.querySelectorAll('.activity-links').forEach(el => el.remove());
+
+      const rem = remedial[id];
+      const enr = enrichment[id];
+      const ws = worksheets[id];
+      const mm = mindmaps[id];
+      let html = '';
+      if(rem && (rem.video || rem.file)){
+        html += '<div class="activity-links" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">' +
+          '<span style="font-size:.78rem; font-weight:700; color:var(--ink-soft);">🩹 علاجي:</span>';
+        if(rem.video) html += '<a class="media-link" href="' + rem.video + '" target="_blank" rel="noopener">▶ فيديو</a>';
+        if(rem.file) html += '<a class="media-link" href="' + rem.file + '" target="_blank" rel="noopener">📄 ملف</a>';
+        html += '</div>';
+      }
+      if(enr && (enr.video || enr.file)){
+        html += '<div class="activity-links" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">' +
+          '<span style="font-size:.78rem; font-weight:700; color:var(--turquoise-dark);">🌟 إثرائي:</span>';
+        if(enr.video) html += '<a class="media-link" href="' + enr.video + '" target="_blank" rel="noopener">▶ فيديو</a>';
+        if(enr.file) html += '<a class="media-link" href="' + enr.file + '" target="_blank" rel="noopener">📄 ملف</a>';
+        html += '</div>';
+      }
+      if(ws && ws.file){
+        html += '<div class="activity-links" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">' +
+          '<span style="font-size:.78rem; font-weight:700; color:var(--blue-deep);">📝 ورقة عمل:</span>' +
+          '<a class="media-link" href="' + ws.file + '" target="_blank" rel="noopener">فتح الملف</a></div>';
+      }
+      if(mm && mm.file){
+        html += '<div class="activity-links" style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">' +
+          '<span style="font-size:.78rem; font-weight:700; color:var(--turquoise-dark);">🧠 خريطة ذهنية:</span>' +
+          '<a class="media-link" href="' + mm.file + '" target="_blank" rel="noopener">فتح الملف</a></div>';
+      }
+      if(html) card.insertAdjacentHTML('beforeend', html);
+    });
   }
 
   // ===== Standalone quizzes: "الاختبارات" + "التحصيلي" sections (shared via Firestore) =====
@@ -1650,6 +1789,56 @@
     return {grade: Math.round(grade * 10) / 10, completedCount, total: lessonIds.length};
   }
 
+  function computeStudentAnalysis(userProgress){
+    userProgress = userProgress || {};
+    const gradeInfo = computeStudentGrade(userProgress);
+
+    let level;
+    if(gradeInfo.grade >= 4.5) level = 'ممتاز';
+    else if(gradeInfo.grade >= 3.5) level = 'جيد جدًا';
+    else if(gradeInfo.grade >= 2.5) level = 'جيد';
+    else if(gradeInfo.grade >= 1.5) level = 'مقبول';
+    else level = 'يحتاج متابعة ودعم';
+
+    const weakLessons = [];
+    const strongLessons = [];
+    const notStartedLessons = [];
+
+    Object.keys(LESSONS_META).forEach(id => {
+      const p = userProgress[id] || {};
+      const title = LESSONS_META[id].title;
+      if(!p.watched && !p.completed){
+        notStartedLessons.push(title);
+      }else if(p.completed && p.score === p.total){
+        strongLessons.push(title);
+      }else if(p.completed && p.score < p.total){
+        weakLessons.push(title);
+      }else if(p.watched && !p.completed){
+        weakLessons.push(title);
+      }
+    });
+
+    let remedialPlan;
+    if(weakLessons.length || notStartedLessons.length){
+      const items = weakLessons.concat(notStartedLessons);
+      remedialPlan = 'يُنصح بمراجعة الدروس التالية وإعادة حل أسئلتها: ' + items.join('، ') + '.';
+    }else{
+      remedialPlan = 'لا توجد نقاط ضعف حاليًا تستدعي خطة علاجية.';
+    }
+
+    let enrichmentPlan;
+    const totalLessons = Object.keys(LESSONS_META).length;
+    if(strongLessons.length === totalLessons){
+      enrichmentPlan = 'أظهرت إتقانًا كاملًا لجميع الدروس — يُنصح بخوض الاختبارات التحصيلية الأربعة كتحدٍ إثرائي إضافي.';
+    }else if(strongLessons.length > 0){
+      enrichmentPlan = 'أظهرت تميزًا في: ' + strongLessons.join('، ') + ' — شجّعيها على تجربة اختبار تحصيلي مرتبط بنفس المحتوى للتوسع أكثر.';
+    }else{
+      enrichmentPlan = 'ركّزي أولًا على إكمال الدروس الأساسية قبل الانتقال لأنشطة إثرائية.';
+    }
+
+    return {gradeInfo, level, weakLessons, strongLessons, notStartedLessons, remedialPlan, enrichmentPlan};
+  }
+
   async function renderProgressSection(){
     const uid = getCurrentUid();
     const loggedOut = document.getElementById('progressLoggedOut');
@@ -1666,13 +1855,18 @@
     const grid = document.getElementById('progressGrid');
     grid.innerHTML = '';
 
-    const gradeInfo = computeStudentGrade(userProgress);
+    const analysis = computeStudentAnalysis(userProgress);
     const gradeCard = document.getElementById('gradeSummaryCard');
     gradeCard.innerHTML =
       '<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">' +
       '<div><h3 style="font-size:1.1rem; margin-bottom:4px;">درجة الأنشطة الصفية</h3>' +
-      '<p style="color:var(--ink-soft); font-size:.85rem;">أكملتِ ' + gradeInfo.completedCount + ' من ' + gradeInfo.total + ' دروس بنجاح</p></div>' +
-      '<div style="text-align:center;"><div style="font-family:\'Cairo\'; font-weight:800; font-size:2.2rem; color:var(--turquoise-dark);">' + gradeInfo.grade + ' / 5</div></div>' +
+      '<p style="color:var(--ink-soft); font-size:.85rem;">أكملتِ ' + analysis.gradeInfo.completedCount + ' من ' + analysis.gradeInfo.total + ' دروس بنجاح</p></div>' +
+      '<div style="text-align:center;"><div style="font-family:\'Cairo\'; font-weight:800; font-size:2.2rem; color:var(--turquoise-dark);">' + analysis.gradeInfo.grade + ' / 5</div>' +
+      '<span style="font-size:.78rem; font-weight:700; color:var(--blue-deep); background:var(--ring); padding:4px 12px; border-radius:999px;">' + analysis.level + '</span></div>' +
+      '</div>' +
+      '<div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">' +
+      '<p style="font-size:.85rem; margin-bottom:6px;"><b style="color:var(--blue-deep);">🩹 خطة علاجية:</b> ' + analysis.remedialPlan + '</p>' +
+      '<p style="font-size:.85rem;"><b style="color:var(--turquoise-dark);">🌟 خطة إثرائية:</b> ' + analysis.enrichmentPlan + '</p>' +
       '</div>' +
       '<button class="btn-secondary" style="width:100%; margin-top:16px;" onclick="openPrintReport()">طباعة / تصدير تقرير الدرجة</button>';
 
@@ -1699,6 +1893,7 @@
     renderAuthState();
     renderProgressSection();
     applyLessonLocks();
+    applyActivityLinksToLessonCards();
   }
   initFirestoreDependentUI();
 
@@ -1709,8 +1904,8 @@
       const profile = profiles[uid];
       const name = profile ? profile.name : (profile && profile.username) || uid;
       const username = profile ? profile.username : uid;
-      const gradeInfo = computeStudentGrade(progress[uid]);
-      return {name, username, grade: gradeInfo.grade, completedCount: gradeInfo.completedCount, total: gradeInfo.total};
+      const analysis = computeStudentAnalysis(progress[uid]);
+      return {uid, name, username, grade: analysis.gradeInfo.grade, level: analysis.level, completedCount: analysis.gradeInfo.completedCount, total: analysis.gradeInfo.total};
     });
     list.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
     return list;
@@ -1728,7 +1923,12 @@
     }
     let rows = '';
     students.forEach((s, i) => {
-      rows += '<div class="admin-lesson-row"><span>' + (i+1) + '. ' + s.name + '</span><span style="font-weight:700; color:var(--turquoise-dark);">' + s.grade + ' / 5</span></div>';
+      rows += '<div class="admin-lesson-row">' +
+        '<span>' + (i+1) + '. ' + s.name + ' <span style="color:var(--ink-soft); font-size:.78rem;">(' + s.level + ')</span></span>' +
+        '<span style="display:flex; align-items:center; gap:10px;">' +
+        '<span style="font-weight:700; color:var(--turquoise-dark);">' + s.grade + ' / 5</span>' +
+        '<button onclick="openPrintReportForUid(\'' + s.uid + '\')" style="color:var(--blue-deep);">عرض التقرير</button>' +
+        '</span></div>';
     });
     wrap.innerHTML = rows;
     printBtn.style.display = 'block';
@@ -1739,13 +1939,13 @@
     const today = new Date().toLocaleDateString('ar-SA');
     let rowsHtml = '';
     students.forEach((s, i) => {
-      rowsHtml += '<tr><td>' + (i+1) + '</td><td>' + s.name + '</td><td>' + s.completedCount + ' / ' + s.total + '</td><td>' + s.grade + ' / 5</td></tr>';
+      rowsHtml += '<tr><td>' + (i+1) + '</td><td>' + s.name + '</td><td>' + s.completedCount + ' / ' + s.total + '</td><td>' + s.grade + ' / 5</td><td>' + s.level + '</td></tr>';
     });
     document.getElementById('printReportContent').innerHTML =
       '<h2>تقرير درجات الأنشطة الصفية — جميع الطالبات</h2>' +
       '<p><b>التاريخ:</b> ' + today + '</p>' +
       '<table style="width:100%; border-collapse:collapse; margin:16px 0;">' +
-      '<thead><tr><th style="border:1px solid #ccc; padding:6px;">م</th><th style="border:1px solid #ccc; padding:6px;">اسم الطالبة</th><th style="border:1px solid #ccc; padding:6px;">الدروس المكتملة</th><th style="border:1px solid #ccc; padding:6px;">الدرجة النهائية</th></tr></thead>' +
+      '<thead><tr><th style="border:1px solid #ccc; padding:6px;">م</th><th style="border:1px solid #ccc; padding:6px;">اسم الطالبة</th><th style="border:1px solid #ccc; padding:6px;">الدروس المكتملة</th><th style="border:1px solid #ccc; padding:6px;">الدرجة النهائية</th><th style="border:1px solid #ccc; padding:6px;">التصنيف</th></tr></thead>' +
       '<tbody>' + rowsHtml + '</tbody></table>' +
       '<p style="font-size:.85rem; color:#555;">ملاحظة: هذا التقرير يشمل فقط الطالبات اللي سجّلن دخول من هذا الجهاز بالذات.</p>';
 
@@ -1753,12 +1953,10 @@
     window.print();
   }
 
-  async function openPrintReport(){
-    const uid = getCurrentUid();
-    if(!uid) return;
+  async function buildAndPrintStudentReport(uid, displayName){
     const profile = await getProfile(uid);
     const progress = await getStudentProgress(uid);
-    const gradeInfo = computeStudentGrade(progress);
+    const analysis = computeStudentAnalysis(progress);
 
     let rowsHtml = '';
     Object.keys(LESSONS_META).forEach(id => {
@@ -1772,16 +1970,28 @@
     const today = new Date().toLocaleDateString('ar-SA');
     document.getElementById('printReportContent').innerHTML =
       '<h2>تقرير درجة الأنشطة الصفية — الكيمياء البسيطة</h2>' +
-      '<p><b>اسم الطالبة:</b> ' + (profile ? profile.name : '') + '</p>' +
-      '<p><b>اسم المستخدم:</b> ' + getCurrentUsername() + '</p>' +
+      '<p><b>اسم الطالبة:</b> ' + (profile ? profile.name : (displayName || '')) + '</p>' +
+      '<p><b>اسم المستخدم:</b> ' + (profile ? profile.username : '') + '</p>' +
       '<p><b>التاريخ:</b> ' + today + '</p>' +
       '<table style="width:100%; border-collapse:collapse; margin:16px 0;">' +
       '<thead><tr><th style="border:1px solid #ccc; padding:6px;">الدرس</th><th style="border:1px solid #ccc; padding:6px;">الحالة</th><th style="border:1px solid #ccc; padding:6px;">نتيجة الاختبار</th></tr></thead>' +
       '<tbody>' + rowsHtml + '</tbody></table>' +
-      '<h3>الدرجة النهائية: ' + gradeInfo.grade + ' / 5</h3>';
+      '<h3>الدرجة النهائية: ' + analysis.gradeInfo.grade + ' / 5 — التصنيف: ' + analysis.level + '</h3>' +
+      '<p style="margin-top:14px;"><b>🩹 الخطة العلاجية:</b> ' + analysis.remedialPlan + '</p>' +
+      '<p style="margin-top:6px;"><b>🌟 الخطة الإثرائية:</b> ' + analysis.enrichmentPlan + '</p>';
 
     document.body.classList.add('printing-report');
     window.print();
+  }
+
+  async function openPrintReport(){
+    const uid = getCurrentUid();
+    if(!uid) return;
+    await buildAndPrintStudentReport(uid);
+  }
+
+  async function openPrintReportForUid(uid){
+    await buildAndPrintStudentReport(uid);
   }
   window.addEventListener('afterprint', () => document.body.classList.remove('printing-report'));
 
