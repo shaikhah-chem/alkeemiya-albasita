@@ -993,6 +993,15 @@
     await fsSetDoc('settings', SETTINGS_DOC_ID, patch);
   }
 
+  // ===== رادع بسيط (مو حماية حقيقية): تعطيل الزر الأيمن واختصارات أدوات المطورين =====
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    const key = e.key.toUpperCase();
+    if(key === 'F12') e.preventDefault();
+    if(e.ctrlKey && e.shiftKey && (key === 'I' || key === 'J' || key === 'C')) e.preventDefault();
+    if(e.ctrlKey && key === 'U') e.preventDefault();
+  });
+
   // mobile menu toggle (simple: show nav links stacked)
   const burger = document.querySelector('.burger');
   const navUl = document.querySelector('nav ul');
