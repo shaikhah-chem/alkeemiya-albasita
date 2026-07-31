@@ -17,7 +17,13 @@
     --ink:#0B2B2E;
     --ink-soft:#4F7072;
     --gold:#F3B94D;
+    --coral:#FF6B4A;
+    --coral-dark:#E4502F;
+    --violet:#8B5CF6;
+    --violet-dark:#6D3FD4;
     --ring: rgba(20,184,166,.16);
+    --ring-coral: rgba(255,107,74,.14);
+    --ring-violet: rgba(139,92,246,.14);
     --border: rgba(27,75,102,.12);
   }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -40,6 +46,16 @@
     color:var(--turquoise-dark); letter-spacing:.3px;
     background:var(--ring); padding:6px 16px; border-radius:999px;
     margin-bottom:16px;
+  }
+  .eyebrow-icon{width:14px; height:20px; flex-shrink:0; overflow:visible;}
+  .eyebrow-icon .bubble{animation:bubbleRise 1.8s ease-in infinite; transform-origin:center;}
+  @keyframes bubbleRise{
+    0%{transform:translateY(0); opacity:.95;}
+    75%{opacity:.8;}
+    100%{transform:translateY(-9px); opacity:0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .eyebrow-icon .bubble{animation:none;}
   }
 
   /* ===== Header ===== */
@@ -80,10 +96,10 @@
   .hero p{margin-top:20px; font-size:1.1rem; color:var(--ink-soft); max-width:520px;}
   .hero-actions{display:flex; gap:14px; margin-top:32px; flex-wrap:wrap;}
   .btn-primary{
-    background:var(--turquoise); color:#fff; padding:14px 30px; border-radius:12px; font-weight:700;
-    box-shadow:0 10px 22px rgba(20,184,166,.32); transition:.2s; border:none; cursor:pointer; font-family:'Cairo';
+    background:linear-gradient(90deg, var(--turquoise), var(--coral)); color:#fff; padding:14px 30px; border-radius:12px; font-weight:700;
+    box-shadow:0 10px 22px rgba(255,107,74,.28); transition:.25s; border:none; cursor:pointer; font-family:'Cairo'; background-size:160% 100%; background-position:0% 0%;
   }
-  .btn-primary:hover{background:var(--turquoise-dark); transform:translateY(-2px);}
+  .btn-primary:hover{background-position:100% 0%; box-shadow:0 12px 28px rgba(255,107,74,.4); transform:translateY(-2px);}
   .btn-secondary{
     background:#fff; color:var(--blue-deep); padding:14px 30px; border-radius:12px; font-weight:700;
     border:2px solid var(--border); transition:.2s; font-family:'Cairo';
@@ -118,7 +134,7 @@
     background:var(--card); border:1px solid var(--border); border-radius:18px; padding:28px;
     position:relative; transition:.25s; overflow:hidden;
   }
-  .card:hover{transform:translateY(-5px); box-shadow:0 16px 32px rgba(27,75,102,.1); border-color:var(--turquoise);}
+  .card:hover{transform:translateY(-5px); box-shadow:0 16px 32px rgba(255,107,74,.16), 0 6px 14px rgba(139,92,246,.12); border-color:var(--coral);}
   .elem-badge{
     width:44px; height:44px; border:2px solid var(--turquoise); border-radius:10px;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -467,16 +483,16 @@
       <h4 style="font-size:.92rem; color:var(--blue-deep); margin-top:10px;">🩹 نشاط علاجي</h4>
       <div class="field"><label>رابط فيديو مباشر (اختياري)</label><input type="url" id="remVideoUrl" placeholder="https://example.com/remedial.mp4"></div>
       <div class="field"><label>أو ارفعي فيديو من جهازك — معاينة مؤقتة فقط</label><input type="file" id="remVideoFile" accept="video/*"></div>
-      <div class="field"><label>رابط ملف PDF (اختياري)</label><input type="url" id="remFileUrl" placeholder="https://example.com/remedial.pdf"></div>
-      <div class="field"><label>أو ارفعي ملف PDF من جهازك — معاينة مؤقتة فقط</label><input type="file" id="remFileFile" accept="application/pdf"></div>
+      <div class="field"><label>رابط ملف (PDF أو صورة) (اختياري)</label><input type="url" id="remFileUrl" placeholder="https://example.com/remedial.pdf"></div>
+      <div class="field"><label>أو ارفعي ملفًا من جهازك — معاينة مؤقتة فقط</label><input type="file" id="remFileFile" accept="application/pdf,image/*"></div>
       <button class="btn-secondary" onclick="saveActivity('remedial')">حفظ النشاط العلاجي</button>
       <div class="auth-success" id="remActSuccess" style="display:none;"></div>
 
       <h4 style="font-size:.92rem; color:var(--turquoise-dark); margin-top:16px;">🌟 نشاط إثرائي</h4>
       <div class="field"><label>رابط فيديو مباشر (اختياري)</label><input type="url" id="enrVideoUrl" placeholder="https://example.com/enrichment.mp4"></div>
       <div class="field"><label>أو ارفعي فيديو من جهازك — معاينة مؤقتة فقط</label><input type="file" id="enrVideoFile" accept="video/*"></div>
-      <div class="field"><label>رابط ملف PDF (اختياري)</label><input type="url" id="enrFileUrl" placeholder="https://example.com/enrichment.pdf"></div>
-      <div class="field"><label>أو ارفعي ملف PDF من جهازك — معاينة مؤقتة فقط</label><input type="file" id="enrFileFile" accept="application/pdf"></div>
+      <div class="field"><label>رابط ملف (PDF أو صورة) (اختياري)</label><input type="url" id="enrFileUrl" placeholder="https://example.com/enrichment.pdf"></div>
+      <div class="field"><label>أو ارفعي ملفًا من جهازك — معاينة مؤقتة فقط</label><input type="file" id="enrFileFile" accept="application/pdf,image/*"></div>
       <button class="btn-secondary" onclick="saveActivity('enrichment')">حفظ النشاط الإثرائي</button>
       <div class="auth-success" id="enrActSuccess" style="display:none;"></div>
 
@@ -491,6 +507,14 @@
       <div class="field"><label>أو ارفعي ملفًا من جهازك — معاينة مؤقتة فقط</label><input type="file" id="mmFileFile" accept="application/pdf,image/*"></div>
       <button class="btn-secondary" onclick="saveActivity('mindmap')">حفظ الخريطة الذهنية</button>
       <div class="auth-success" id="mmActSuccess" style="display:none;"></div>
+
+      <hr style="border:none; border-top:1px solid var(--border); margin:8px 0;">
+
+      <h3 style="font-size:1rem; color:var(--blue-deep);">لوحة تحليل نتائج الطالبات</h3>
+      <p class="auth-hint" style="text-align:right;">نظرة شاملة على مستوى الصف: توزيع المستويات، متوسط الأداء، وأداء كل درس.</p>
+      <button class="btn-secondary" onclick="renderAnalyticsDashboard()">عرض لوحة التحليل</button>
+      <div id="analyticsWrap" style="margin-top:14px;"></div>
+      <button class="btn-primary" id="printAnalyticsBtn" style="width:100%; display:none; margin-top:10px;" onclick="openPrintAnalytics()">طباعة/تصدير لوحة التحليل</button>
 
       <hr style="border:none; border-top:1px solid var(--border); margin:8px 0;">
 
@@ -553,9 +577,9 @@
 <section class="hero" id="home">
   <div class="container">
     <div class="hero-text">
-      <span class="eyebrow">⚗️ منصة كيمياء ناطقة بالعربية</span>
+      <span class="eyebrow"><svg class="eyebrow-icon" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="1" width="8" height="16" rx="4" fill="none" stroke="var(--blue-deep)" stroke-width="1.4"/><path d="M4 11 L4 14 Q4 17 8 17 Q12 17 12 14 L12 11 Z" fill="var(--coral)"/><circle class="bubble" cx="6.5" cy="13" r="1" fill="#FFD9CC" style="animation-delay:0s"/><circle class="bubble" cx="9" cy="14" r="0.8" fill="#FFD9CC" style="animation-delay:.5s"/><circle class="bubble" cx="7.5" cy="12.5" r="0.7" fill="#FFD9CC" style="animation-delay:1s"/></svg>منصة كيمياء ناطقة بالعربية</span>
       <h1>الكيمياء <span>البسيطة</span><br>حين تتحول المعادلة إلى فكرة واضحة</h1>
-      <p>دروس واختبارات في مادة الكيمياء، مبنية بأسلوب مبسّط ومرتب، لتساعد المعلمات على الشرح والطالبات على الفهم دون تعقيد.</p>
+      <p>دروس واختبارات في مادة الكيمياء، مبنية بأسلوب مبسّط ومرتب، لتساعد الطالبات على الفهم دون تعقيد.</p>
       <div class="hero-actions">
         <a href="#lessons" class="btn-primary">تصفّحي الدروس</a>
         <a href="#quizzes" class="btn-secondary">جرّبي اختبارًا</a>
@@ -615,7 +639,7 @@
   <div class="container">
     <div class="sec-head" style="display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap;">
       <div>
-        <span class="eyebrow">الدروس</span>
+        <span class="eyebrow"><svg class="eyebrow-icon" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="1" width="8" height="16" rx="4" fill="none" stroke="var(--blue-deep)" stroke-width="1.4"/><path d="M4 11 L4 14 Q4 17 8 17 Q12 17 12 14 L12 11 Z" fill="var(--coral)"/><circle class="bubble" cx="6.5" cy="13" r="1" fill="#FFD9CC" style="animation-delay:0s"/><circle class="bubble" cx="9" cy="14" r="0.8" fill="#FFD9CC" style="animation-delay:.5s"/><circle class="bubble" cx="7.5" cy="12.5" r="0.7" fill="#FFD9CC" style="animation-delay:1s"/></svg>الدروس</span>
         <h2>دروس مرتبة كترتيب الجدول الدوري</h2>
         <p>كل درس يبني على الذي قبله، من تركيب الذرة إلى عالم الكيمياء العضوية، بشرح مبسّط وأمثلة من الواقع.</p>
       </div>
@@ -665,7 +689,7 @@
 <section id="quizzes">
   <div class="container">
     <div class="sec-head">
-      <span class="eyebrow">الاختبارات</span>
+      <span class="eyebrow"><svg class="eyebrow-icon" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="1" width="8" height="16" rx="4" fill="none" stroke="var(--blue-deep)" stroke-width="1.4"/><path d="M4 11 L4 14 Q4 17 8 17 Q12 17 12 14 L12 11 Z" fill="var(--coral)"/><circle class="bubble" cx="6.5" cy="13" r="1" fill="#FFD9CC" style="animation-delay:0s"/><circle class="bubble" cx="9" cy="14" r="0.8" fill="#FFD9CC" style="animation-delay:.5s"/><circle class="bubble" cx="7.5" cy="12.5" r="0.7" fill="#FFD9CC" style="animation-delay:1s"/></svg>الاختبارات</span>
       <h2>اختبري فهمك بعد كل درس</h2>
       <p>اختبارات قصيرة ومركزة، تصحَّح فور الانتهاء، لتتأكدي من ترسّخ الفكرة قبل الانتقال للدرس التالي.</p>
     </div>
@@ -697,7 +721,7 @@
 <section id="tahsili" class="hexbg">
   <div class="container">
     <div class="sec-head">
-      <span class="eyebrow">الاختبارات التحصيلية</span>
+      <span class="eyebrow"><svg class="eyebrow-icon" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="1" width="8" height="16" rx="4" fill="none" stroke="var(--blue-deep)" stroke-width="1.4"/><path d="M4 11 L4 14 Q4 17 8 17 Q12 17 12 14 L12 11 Z" fill="var(--coral)"/><circle class="bubble" cx="6.5" cy="13" r="1" fill="#FFD9CC" style="animation-delay:0s"/><circle class="bubble" cx="9" cy="14" r="0.8" fill="#FFD9CC" style="animation-delay:.5s"/><circle class="bubble" cx="7.5" cy="12.5" r="0.7" fill="#FFD9CC" style="animation-delay:1s"/></svg>الاختبارات التحصيلية</span>
       <h2>تدرّبي على نمط اختبار التحصيلي في الكيمياء</h2>
       <p>مجموعات تدريبية مصنّفة حسب مقررات الكيمياء الأربعة، لخوض التحصيلي بثقة أكبر.</p>
     </div>
@@ -746,7 +770,7 @@
 <section id="progress">
   <div class="container">
     <div class="sec-head">
-      <span class="eyebrow">تقدّمي</span>
+      <span class="eyebrow"><svg class="eyebrow-icon" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="1" width="8" height="16" rx="4" fill="none" stroke="var(--blue-deep)" stroke-width="1.4"/><path d="M4 11 L4 14 Q4 17 8 17 Q12 17 12 14 L12 11 Z" fill="var(--coral)"/><circle class="bubble" cx="6.5" cy="13" r="1" fill="#FFD9CC" style="animation-delay:0s"/><circle class="bubble" cx="9" cy="14" r="0.8" fill="#FFD9CC" style="animation-delay:.5s"/><circle class="bubble" cx="7.5" cy="12.5" r="0.7" fill="#FFD9CC" style="animation-delay:1s"/></svg>تقدّمي</span>
       <h2>تابعي تقدّمك في كل درس</h2>
       <p>شاهدي كل درس كاملًا لتُفتح أسئلته، ثم أجيبي عليها لتظهر نتيجتك هنا.</p>
     </div>
@@ -764,7 +788,7 @@
 <section id="about" class="hexbg">
   <div class="container about-wrap">
     <div class="about-text">
-      <span class="eyebrow">من نحن</span>
+      <span class="eyebrow"><svg class="eyebrow-icon" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="1" width="8" height="16" rx="4" fill="none" stroke="var(--blue-deep)" stroke-width="1.4"/><path d="M4 11 L4 14 Q4 17 8 17 Q12 17 12 14 L12 11 Z" fill="var(--coral)"/><circle class="bubble" cx="6.5" cy="13" r="1" fill="#FFD9CC" style="animation-delay:0s"/><circle class="bubble" cx="9" cy="14" r="0.8" fill="#FFD9CC" style="animation-delay:.5s"/><circle class="bubble" cx="7.5" cy="12.5" r="0.7" fill="#FFD9CC" style="animation-delay:1s"/></svg>من نحن</span>
       <h2>الكيمياء حين تُشرح بلا تعقيد</h2>
       <p style="color:var(--ink-soft); margin-top:14px;">الكيمياء البسيطة منصة تعليمية تابعة لـ«نواة العلوم التعليمية»، صُممت لتحويل مفاهيم الكيمياء الدسمة إلى دروس واضحة، خطوة بخطوة، تناسب المعلمات في شرح المقرر والطالبات في المراجعة والفهم الذاتي.</p>
       <ul class="about-list">
@@ -789,7 +813,7 @@
 <section id="contact">
   <div class="container contact-wrap">
     <div class="contact-form">
-      <span class="eyebrow">تواصل معنا</span>
+      <span class="eyebrow"><svg class="eyebrow-icon" viewBox="0 0 16 22" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="1" width="8" height="16" rx="4" fill="none" stroke="var(--blue-deep)" stroke-width="1.4"/><path d="M4 11 L4 14 Q4 17 8 17 Q12 17 12 14 L12 11 Z" fill="var(--coral)"/><circle class="bubble" cx="6.5" cy="13" r="1" fill="#FFD9CC" style="animation-delay:0s"/><circle class="bubble" cx="9" cy="14" r="0.8" fill="#FFD9CC" style="animation-delay:.5s"/><circle class="bubble" cx="7.5" cy="12.5" r="0.7" fill="#FFD9CC" style="animation-delay:1s"/></svg>تواصل معنا</span>
       <h2 style="color:var(--blue-deep); font-size:1.6rem; margin:10px 0 20px;">هل لديك استفسار؟ راسلينا</h2>
       <form id="contactForm">
         <div class="field">
@@ -797,8 +821,8 @@
           <input type="text" required placeholder="اكتبي اسمك">
         </div>
         <div class="field">
-          <label>البريد الإلكتروني</label>
-          <input type="email" required placeholder="example@email.com">
+          <label>اسم المستخدم</label>
+          <input type="text" required placeholder="اسم المستخدم بالموقع">
         </div>
         <div class="field">
           <label>رسالتك</label>
@@ -1911,6 +1935,91 @@
     return list;
   }
 
+  const LEVEL_ORDER = ['ممتاز', 'جيد جدًا', 'جيد', 'مقبول', 'يحتاج متابعة ودعم'];
+
+  async function computeClassAnalytics(){
+    const progress = await getAllProgress();
+    const uids = Object.keys(progress);
+
+    const levelCounts = {};
+    LEVEL_ORDER.forEach(l => levelCounts[l] = 0);
+    let totalGrade = 0;
+    const lessonStats = {};
+    Object.keys(LESSONS_META).forEach(id => lessonStats[id] = {completed: 0});
+
+    uids.forEach(uid => {
+      const analysis = computeStudentAnalysis(progress[uid]);
+      levelCounts[analysis.level] = (levelCounts[analysis.level] || 0) + 1;
+      totalGrade += analysis.gradeInfo.grade;
+      Object.keys(LESSONS_META).forEach(id => {
+        const p = progress[uid][id] || {};
+        if(p.completed) lessonStats[id].completed++;
+      });
+    });
+
+    const avgGrade = uids.length ? Math.round((totalGrade / uids.length) * 10) / 10 : 0;
+    return {studentCount: uids.length, avgGrade, levelCounts, lessonStats};
+  }
+
+  function buildAnalyticsHtml(data, forPrint){
+    const barColor = forPrint ? '#14B8A6' : 'var(--turquoise)';
+    const barColor2 = forPrint ? '#1B4B66' : 'var(--blue-deep)';
+    let html = '<div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:18px;">' +
+      '<div style="flex:1; min-width:140px; background:' + (forPrint ? '#F0FDFA' : 'var(--ring)') + '; border-radius:12px; padding:16px; text-align:center;">' +
+      '<div style="font-weight:800; font-size:1.8rem; color:' + barColor2 + ';">' + data.studentCount + '</div>' +
+      '<div style="font-size:.8rem; color:#666;">عدد الطالبات</div></div>' +
+      '<div style="flex:1; min-width:140px; background:' + (forPrint ? '#F0FDFA' : 'var(--ring)') + '; border-radius:12px; padding:16px; text-align:center;">' +
+      '<div style="font-weight:800; font-size:1.8rem; color:' + barColor2 + ';">' + data.avgGrade + ' / 5</div>' +
+      '<div style="font-size:.8rem; color:#666;">متوسط الدرجة العام</div></div>' +
+      '</div>';
+
+    if(!data.studentCount){
+      return html + '<p>لا توجد بيانات طالبات بعد.</p>';
+    }
+
+    html += '<h4 style="margin-bottom:10px;">توزيع المستويات</h4>';
+    LEVEL_ORDER.forEach(level => {
+      const count = data.levelCounts[level] || 0;
+      const pct = Math.round((count / data.studentCount) * 100);
+      html += '<div style="margin-bottom:10px;">' +
+        '<div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:4px;"><span>' + level + '</span><span>' + count + ' (' + pct + '٪)</span></div>' +
+        '<div style="background:#eee; border-radius:999px; height:10px; overflow:hidden;"><div style="background:' + barColor + '; height:100%; width:' + pct + '%;"></div></div>' +
+        '</div>';
+    });
+
+    html += '<h4 style="margin:18px 0 10px;">أداء الطالبات في كل درس (نسبة من أكملن بنجاح)</h4>';
+    Object.keys(LESSONS_META).forEach(id => {
+      const completed = data.lessonStats[id].completed;
+      const pct = Math.round((completed / data.studentCount) * 100);
+      html += '<div style="margin-bottom:10px;">' +
+        '<div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:4px;"><span>' + LESSONS_META[id].title + '</span><span>' + completed + ' / ' + data.studentCount + ' (' + pct + '٪)</span></div>' +
+        '<div style="background:#eee; border-radius:999px; height:10px; overflow:hidden;"><div style="background:' + barColor2 + '; height:100%; width:' + pct + '%;"></div></div>' +
+        '</div>';
+    });
+    return html;
+  }
+
+  async function renderAnalyticsDashboard(){
+    const wrap = document.getElementById('analyticsWrap');
+    const printBtn = document.getElementById('printAnalyticsBtn');
+    wrap.innerHTML = '<p class="auth-hint">جارٍ التحميل...</p>';
+    const data = await computeClassAnalytics();
+    wrap.innerHTML = buildAnalyticsHtml(data, false);
+    printBtn.style.display = data.studentCount ? 'block' : 'none';
+  }
+
+  async function openPrintAnalytics(){
+    const data = await computeClassAnalytics();
+    const today = new Date().toLocaleDateString('ar-SA');
+    document.getElementById('printReportContent').innerHTML =
+      '<h2>لوحة تحليل نتائج الطالبات — الكيمياء البسيطة</h2>' +
+      '<p><b>التاريخ:</b> ' + today + '</p>' +
+      buildAnalyticsHtml(data, true);
+
+    document.body.classList.add('printing-report');
+    window.print();
+  }
+
   async function renderAllStudentsReport(){
     const wrap = document.getElementById('allStudentsReportWrap');
     const printBtn = document.getElementById('printAllStudentsBtn');
@@ -1946,8 +2055,7 @@
       '<p><b>التاريخ:</b> ' + today + '</p>' +
       '<table style="width:100%; border-collapse:collapse; margin:16px 0;">' +
       '<thead><tr><th style="border:1px solid #ccc; padding:6px;">م</th><th style="border:1px solid #ccc; padding:6px;">اسم الطالبة</th><th style="border:1px solid #ccc; padding:6px;">الدروس المكتملة</th><th style="border:1px solid #ccc; padding:6px;">الدرجة النهائية</th><th style="border:1px solid #ccc; padding:6px;">التصنيف</th></tr></thead>' +
-      '<tbody>' + rowsHtml + '</tbody></table>' +
-      '<p style="font-size:.85rem; color:#555;">ملاحظة: هذا التقرير يشمل فقط الطالبات اللي سجّلن دخول من هذا الجهاز بالذات.</p>';
+      '<tbody>' + rowsHtml + '</tbody></table>';
 
     document.body.classList.add('printing-report');
     window.print();
