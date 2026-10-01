@@ -313,6 +313,8 @@
   /* ===== Locked lessons ===== */
   .card.locked-lesson{opacity:.55; filter:grayscale(.3);}
   .card.locked-lesson .lesson-open-btn{color:var(--ink-soft); cursor:not-allowed;}
+  .quiz-card.locked-quiz{opacity:.55; filter:grayscale(.3);}
+  .quiz-card.locked-quiz .quiz-btn{background:var(--ink-soft); cursor:not-allowed;}
 
   /* ===== Print report ===== */
   @media print{
@@ -420,11 +422,11 @@
         <select id="mvLessonSelect" style="width:100%; padding:13px 16px; border-radius:10px; border:1.5px solid var(--border); font-family:'Tajawal'; background:var(--bg);"></select>
       </div>
       <div class="field">
-        <label>رابط فيديو مباشر (mp4) — يعمل لكل الطالبات بشكل دائم</label>
+        <label>رابط فيديو مباشر (mp4) — يعمل لكل الطالبات بشكل دائم ✅</label>
         <input type="url" id="mvVideoUrl" placeholder="https://example.com/lesson1.mp4">
       </div>
       <div class="field">
-        <label>أو ارفعي مقطعًا من جهازك — معاينة في هذا المتصفح فقط، تُفقد عند إعادة تحميل الصفحة</label>
+        <label>أو مقطع من جهازك — للتجربة عندك فقط ⚠️ لا يظهر للطالبات</label>
         <input type="file" id="mvVideoFile" accept="video/*">
       </div>
       <button class="btn-secondary" onclick="setLessonVideo()">حفظ فيديو الدرس</button>
@@ -470,6 +472,10 @@
       <h3 style="font-size:1rem; color:var(--blue-deep);">التحكم بإتاحة الدروس للطالبات</h3>
       <p class="auth-hint" style="text-align:right;">فعّلي فقط الدرس اللي انتهيتِ من شرحه وأضفتِ فيديوه — الباقي يبقى مقفلًا للطالبات تلقائيًا حتى تفعّلينه.</p>
       <div class="admin-lesson-list" id="releaseList"></div>
+
+      <h3 style="font-size:1rem; color:var(--blue-deep); margin-top:10px;">التحكم بإتاحة الاختبارات للطالبات</h3>
+      <p class="auth-hint" style="text-align:right;">الاختبار غير المفعّل يظهر للطالبات مقفلًا. (اختبار المخاليط مفعّل افتراضيًا)</p>
+      <div class="admin-lesson-list" id="quizReleaseList"></div>
 
       <hr style="border:none; border-top:1px solid var(--border); margin:8px 0;">
 
@@ -1152,6 +1158,7 @@
     renderAuthState();
     if(typeof renderProgressSection === 'function') renderProgressSection();
     if(typeof applyLessonLocks === 'function') applyLessonLocks();
+    if(typeof applyQuizLocks === 'function') applyQuizLocks();
   });
 
   // ===== Admin panel: add/manage lessons (shared via Firestore, protected by TEACHER_UID) =====
@@ -1161,7 +1168,7 @@
     document.getElementById('adminOverlay').classList.add('open');
     document.getElementById('adminGateStep').classList.toggle('active', !isTeacher);
     document.getElementById('adminFormStep').classList.toggle('active', isTeacher);
-    if(isTeacher){ renderAdminList(); populateLessonSelect(); populateQuizSelect(); renderQuizAdminList(); renderAdminReleaseList(); populateActivityLessonSelect(); }
+    if(isTeacher){ renderAdminList(); populateLessonSelect(); populateQuizSelect(); renderQuizAdminList(); renderAdminReleaseList(); renderAdminQuizReleaseList(); populateActivityLessonSelect(); }
   }
   function closeAdmin(){ document.getElementById('adminOverlay').classList.remove('open'); }
 
@@ -1180,18 +1187,31 @@
     const url = document.getElementById('mvVideoUrl').value.trim();
     const fileInput = document.getElementById('mvVideoFile');
     const successEl = document.getElementById('mvSuccess');
+    const hasFile = fileInput.files && fileInput.files[0];
+    successEl.className = 'auth-success';
 
-    if(fileInput.files && fileInput.files[0]){
-      const blobUrl = URL.createObjectURL(fileInput.files[0]);
-      LESSONS_META[id].videoSrc = blobUrl;
-      successEl.textContent = 'تم ضبط المقطع للمعاينة في هذا المتصفح فقط — سيُفقد عند إعادة تحميل الصفحة. ارفعي الملف لاستضافة حقيقية للنشر الدائم.';
-    }else if(url){
+    // الرابط له الأولوية دائمًا لأنه الوحيد الذي يُحفظ لكل الطالبات
+    if(url){
+      if(/drive\.google\.com|youtube\.com|youtu\.be/i.test(url)){
+        successEl.className = 'auth-error';
+        successEl.textContent = '⚠️ لم يُحفظ: روابط Google Drive و YouTube لا تعمل داخل مشغّل الدرس. ارفعي ملف الفيديو (mp4) إلى مستودع الموقع على GitHub، ثم ضعي رابطه هنا مثل: https://shaikhah-chem.github.io/alkeemiya-albasita/اسم-الملف.mp4';
+        successEl.style.display = 'block';
+        return;
+      }
       LESSONS_META[id].videoSrc = url;
       const settings = await getSiteSettings();
       const savedUrls = settings.lessonVideos || {};
       savedUrls[id] = url;
       await updateSiteSettings({lessonVideos: savedUrls});
-      successEl.textContent = 'تم حفظ رابط الفيديو لهذا الدرس بشكل دائم لكل الطالبات ✓';
+      fileInput.value = '';
+      successEl.textContent = hasFile
+        ? 'تم حفظ الرابط بشكل دائم لكل الطالبات ✓ (تم تجاهل الملف المختار من جهازك لأنه للتجربة فقط)'
+        : 'تم حفظ رابط الفيديو لهذا الدرس بشكل دائم لكل الطالبات ✓';
+    }else if(hasFile){
+      const blobUrl = URL.createObjectURL(fileInput.files[0]);
+      LESSONS_META[id].videoSrc = blobUrl;
+      successEl.className = 'auth-error';
+      successEl.textContent = '⚠️ انتبهي: هذا المقطع للتجربة عندك فقط — لن يظهر للطالبات ويختفي عند تحديث الصفحة. لنشره للطالبات ضعي رابط الفيديو في الخانة الأولى.';
     }else{
       successEl.style.display = 'none';
       return;
@@ -1229,21 +1249,23 @@
     if(cfg.videoField){
       const videoUrl = document.getElementById(cfg.videoField).value.trim();
       const videoFileInput = document.getElementById(cfg.videoFileField);
-      if(videoFileInput.files && videoFileInput.files[0]){
+      if(videoUrl){
+        entry.video = videoUrl;
+        videoFileInput.value = '';
+      }else if(videoFileInput.files && videoFileInput.files[0]){
         entry.video = URL.createObjectURL(videoFileInput.files[0]);
         localOnly = true;
-      }else if(videoUrl){
-        entry.video = videoUrl;
       }
     }
 
     const fileUrl = document.getElementById(cfg.fileField).value.trim();
     const fileFileInput = document.getElementById(cfg.fileFileField);
-    if(fileFileInput.files && fileFileInput.files[0]){
+    if(fileUrl){
+      entry.file = fileUrl;
+      fileFileInput.value = '';
+    }else if(fileFileInput.files && fileFileInput.files[0]){
       entry.file = URL.createObjectURL(fileFileInput.files[0]);
       localOnly = true;
-    }else if(fileUrl){
-      entry.file = fileUrl;
     }
 
     map[id] = entry;
@@ -1307,7 +1329,23 @@
     quiz1: {title:'اختبار: الكيمياء والمادة'},
     quiz2: {title:'اختبار: الطرائق العلمية والبحث العلمي'},
     quiz3: {title:'اختبار: خواص المادة وتغيراتها'},
-    quiz4: {title:'اختبار شامل: المخاليط'},
+    quiz4: {title:'اختبار شامل: المخاليط', questions:[
+      {q:'توجد معظم المواد المألوفة من حولنا على شكل؟', options:['عناصر نقية','مخاليط','مركبات فقط','أيونات'], correct:1},
+      {q:'المادة ذات التركيب المنتظم والثابت تُسمى؟', options:['مخلوطًا','محلولًا','مادة نقية','سبيكة'], correct:2},
+      {q:'لماذا يمكننا فصل مكونات السلطة بينما لا يمكن فصل مكونات الكعك؟', options:['لأن السلطة مخلوط تحتفظ مكوناته بخواصها، أما الكعك فحدث فيه تغيّر كيميائي','لأن السلطة مادة نقية','لأن الكعك مخلوط متجانس','لأن مكونات السلطة متحدة كيميائيًا'], correct:0},
+      {q:'عند إضافة الملح إلى الماء؟', options:['يحدث تفاعل كيميائي وتتكوّن مادة جديدة','لا يحدث تفاعل كيميائي ويتكوّن مخلوط','يتحول الملح إلى عنصر','يفقد الماء خواصه'], correct:1},
+      {q:'عصير البرتقال الطبيعي بلبّه يُصنَّف على أنه؟', options:['مخلوط متجانس','مخلوط غير متجانس','مادة نقية','عنصر'], correct:1},
+      {q:'المكسرات المشكلة تُصنَّف على أنها؟', options:['مخلوط غير متجانس','مخلوط متجانس','محلول','مركب'], correct:0},
+      {q:'المحاليل هي نفسها؟', options:['المخاليط غير المتجانسة','المخاليط المتجانسة','المركبات','العناصر'], correct:1},
+      {q:'ثاني أكسيد الكربون والأكسجين الذائبان في ماء البحر محلول من نوع؟', options:['غاز - غاز','سائل - غاز','صلب - سائل','سائل - سائل'], correct:1},
+      {q:'الأملاح الصلبة الذائبة في ماء البحر محلول من نوع؟', options:['سائل - صلب','غاز - سائل','صلب - صلب','غاز - غاز'], correct:0},
+      {q:'في سبيكة النحاس الأصفر، يكون النحاس هو المذيب لأنه؟', options:['المكوّن الأقل كمية','المكوّن الأكثر كمية','غاز','لا يذوب'], correct:1},
+      {q:'لفصل برادة الحديد عن الرمل نستخدم؟', options:['التقطير','المغناطيس','الكروماتوجرافيا','التبلور'], correct:1},
+      {q:'تعتمد طريقة التبخير على؟', options:['تسخين المحلول ليتبخر السائل وتبقى المادة الصلبة المذابة','انجذاب المواد للمغناطيس','اختلاف حجم الجسيمات','تحوّل الصلب إلى غاز مباشرة'], correct:0},
+      {q:'تعتمد طريقة التبلور على؟', options:['اختلاف درجات الغليان','اختلاف الذائبية وتغيرها مع درجة الحرارة','اختلاف اللون والحجم','الانجذاب للمغناطيس'], correct:1},
+      {q:'لفصل اليود عن الرمل نستخدم طريقة؟', options:['الترشيح','التقطير','التسامي','التبخير'], correct:2},
+      {q:'لفصل ألوان (أصباغ) حبر قلم ملوّن نستخدم؟', options:['الكروماتوجرافيا','الترشيح','المغناطيس','التسامي'], correct:0}
+    ]},
     tah_c1_1: {title:'تحصيلي: كيمياء 1'},
     tah_c21_1: {title:'تحصيلي: كيمياء 2-1'},
     tah_c22_1: {title:'تحصيلي: كيمياء 2-2'},
@@ -1317,7 +1355,8 @@
   async function getQuestionsFor(quizId){
     const settings = await getSiteSettings();
     const extra = settings.quizExtra || {};
-    return extra[quizId] || [];
+    const builtIn = (QUIZZES_META[quizId] && QUIZZES_META[quizId].questions) || [];
+    return builtIn.concat(extra[quizId] || []);
   }
 
   let currentQuizId = null;
@@ -1325,6 +1364,7 @@
   async function openQuiz(quizId){
     const meta = QUIZZES_META[quizId];
     if(!meta) return;
+    if(!isCurrentUserTeacher() && !quizReleasedMap(await getSiteSettings())[quizId]) return; // الاختبار مقفل
     currentQuizId = quizId;
     document.getElementById('quizModalTitle').textContent = meta.title;
     document.getElementById('quizOverlay').classList.add('open');
@@ -1433,8 +1473,11 @@
     if(!wrap) return;
     wrap.innerHTML = '<p class="auth-hint">جارٍ التحميل...</p>';
     const selectedQuiz = document.getElementById('qaQuizSelect').value;
-    const questions = await getQuestionsFor(selectedQuiz);
-    wrap.innerHTML = questions.length ? '' : '<p class="auth-hint">لا توجد أسئلة مضافة لهذا الاختبار بعد.</p>';
+    const settings = await getSiteSettings();
+    const questions = (settings.quizExtra || {})[selectedQuiz] || [];
+    const builtInCount = ((QUIZZES_META[selectedQuiz] || {}).questions || []).length;
+    wrap.innerHTML = (builtInCount ? '<p class="auth-hint">يحتوي هذا الاختبار على ' + builtInCount + ' سؤالًا أساسيًا جاهزًا، وما تضيفينه هنا يُضاف بعدها.</p>' : '') +
+      (questions.length ? '' : '<p class="auth-hint">لا توجد أسئلة مضافة منكِ لهذا الاختبار بعد.</p>');
     questions.forEach(q => {
       const row = document.createElement('div');
       row.className = 'admin-lesson-row';
@@ -1575,10 +1618,20 @@
     },
     l6: {
       title: 'المخاليط',
-      videoSrc: '',
+      videoSrc: 'https://shaikhah-chem.github.io/alkeemiya-albasita/mixtures.mp4',
       questions: [
         {q:'الماء والملح بعد الذوبان يُشكلان؟', options:['مخلوطًا غير متجانس','مخلوطًا متجانسًا','مركبًا كيميائيًا جديدًا','عنصرًا نقيًا'], correct:1},
-        {q:'من طرق فصل مكوّنات المخاليط؟', options:['التفاعل الكيميائي','الترشيح والتبخير','الاحتراق','التحليل الكهربائي فقط'], correct:1}
+        {q:'من طرق فصل مكوّنات المخاليط؟', options:['التفاعل الكيميائي','الترشيح والتبخير','الاحتراق','التحليل الكهربائي فقط'], correct:1},
+        {q:'المخلوط هو؟', options:['مادة نقية ذات تركيب ثابت','مادتان أو أكثر متحدتان كيميائيًا','مادتان أو أكثر غير متحدتين كيميائيًا','عنصر واحد فقط'], correct:2},
+        {q:'عند خلط برادة الحديد مع الرمل، فإن كل مادة؟', options:['تفقد خواصها الأصلية','تحتفظ بخواصها الأصلية','تتحول إلى مادة جديدة','تتفاعل مع الأخرى كيميائيًا'], correct:1},
+        {q:'أي مما يلي يُعد مخلوطًا غير متجانس؟', options:['الهواء','الشاي','الماء والملح','الزيت والماء'], correct:3},
+        {q:'المخلوط الذي تتوزع مكوناته بانتظام ولا يمكن تمييزها ويظهر كمادة واحدة يُسمى؟', options:['مخلوطًا متجانسًا','مخلوطًا غير متجانس','مركبًا','عنصرًا'], correct:0},
+        {q:'الهواء في أسطوانة الغوص مثال على محلول من نوع؟', options:['صلب - صلب','غاز - غاز','سائل - سائل','غاز - سائل'], correct:1},
+        {q:'السبيكة (مثل النحاس الأصفر) هي محلول من نوع؟', options:['صلب - صلب','صلب - سائل','غاز - صلب','سائل - سائل'], correct:0},
+        {q:'تعتمد طريقة الترشيح على؟', options:['اختلاف درجات الغليان','اختلاف حجم الجسيمات وقابليتها للمرور من ورقة الترشيح','اختلاف الذائبية مع درجة الحرارة','الانجذاب للمغناطيس'], correct:1},
+        {q:'لفصل الإيثانول عن الماء نستخدم طريقة؟', options:['الترشيح','التسامي','التقطير','المغناطيس'], correct:2},
+        {q:'تعتمد الكروماتوجرافيا على؟', options:['اختلاف سرعة انتقال المكونات مع الطور الثابت والمتحرك','اختلاف درجات الغليان','تحوّل الصلب إلى غاز مباشرة','اختلاف حجم الجسيمات'], correct:0},
+        {q:'تحوّل المادة الصلبة إلى غاز مباشرة دون المرور بالحالة السائلة يُسمى؟', options:['التبلور','التقطير','التبخير','التسامي'], correct:3}
       ]
     }
   };
@@ -1593,22 +1646,27 @@
   }
 
   // ===== Lesson release/lock control (teacher releases lessons one at a time, shared across devices) =====
+  const LESSON_DEFAULT_RELEASED = {l6: true}; // درس المخاليط متاح افتراضيًا ما لم تغيّره المعلمة
+  function lessonReleasedMap(settings){
+    return Object.assign({}, LESSON_DEFAULT_RELEASED, settings.lessonReleased || {});
+  }
   async function isLessonReleased(lessonId){
     const settings = await getSiteSettings();
-    const map = settings.lessonReleased || {};
+    const map = lessonReleasedMap(settings);
     return !!map[lessonId]; // غير موجود = غير متاح افتراضيًا
   }
   async function setLessonReleased(lessonId, released){
     const settings = await getSiteSettings();
-    const map = settings.lessonReleased || {};
+    const map = Object.assign({}, settings.lessonReleased || {});
     map[lessonId] = released;
     await updateSiteSettings({lessonReleased: map});
     applyLessonLocks();
+    applyQuizLocks();
   }
 
   async function applyLessonLocks(){
     const settings = await getSiteSettings();
-    const map = settings.lessonReleased || {};
+    const map = lessonReleasedMap(settings);
     Object.keys(LESSONS_META).forEach(id => {
       const btn = document.querySelector('.lesson-open-btn[data-lesson="' + id + '"]');
       if(!btn) return;
@@ -1635,7 +1693,7 @@
     if(!wrap) return;
     wrap.innerHTML = '<p class="auth-hint">جارٍ التحميل...</p>';
     const settings = await getSiteSettings();
-    const map = settings.lessonReleased || {};
+    const map = lessonReleasedMap(settings);
     wrap.innerHTML = '';
     Object.keys(LESSONS_META).forEach(id => {
       const released = !!map[id];
@@ -1645,6 +1703,53 @@
         '<label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">' +
         '<input type="checkbox" ' + (released ? 'checked' : '') + ' onchange="setLessonReleased(\'' + id + '\', this.checked); renderAdminReleaseList();"> ' +
         LESSONS_META[id].title + '</label>' +
+        '<span style="font-size:.78rem; color:' + (released ? 'var(--turquoise-dark)' : 'var(--ink-soft)') + ';">' + (released ? 'متاح' : 'مقفل') + '</span>';
+      wrap.appendChild(row);
+    });
+  }
+
+  // ===== Quiz release/lock control =====
+  const QUIZ_DEFAULT_RELEASED = {quiz4: true}; // المتاح افتراضيًا ما لم تغيّره المعلمة
+  function quizReleasedMap(settings){
+    return Object.assign({}, QUIZ_DEFAULT_RELEASED, settings.quizReleased || {});
+  }
+  async function setQuizReleased(quizId, released){
+    const settings = await getSiteSettings();
+    const map = Object.assign({}, settings.quizReleased || {});
+    map[quizId] = released;
+    await updateSiteSettings({quizReleased: map});
+    applyQuizLocks(); renderAdminQuizReleaseList();
+  }
+  async function applyQuizLocks(){
+    const settings = await getSiteSettings();
+    const map = quizReleasedMap(settings);
+    Object.keys(QUIZZES_META).forEach(id => {
+      document.querySelectorAll('.quiz-btn[onclick*="\'' + id + '\'"]').forEach(btn => {
+        const card = btn.closest('.quiz-card');
+        if(map[id]){
+          card.classList.remove('locked-quiz'); btn.textContent = 'ابدئي الاختبار'; btn.disabled = false;
+        }else if(isCurrentUserTeacher()){
+          card.classList.remove('locked-quiz'); btn.textContent = '🔒 معاينة (مقفل للطالبات)'; btn.disabled = false;
+        }else{
+          card.classList.add('locked-quiz'); btn.textContent = '🔒 لم يُطرح بعد'; btn.disabled = true;
+        }
+      });
+    });
+  }
+  async function renderAdminQuizReleaseList(){
+    const wrap = document.getElementById('quizReleaseList');
+    if(!wrap) return;
+    const settings = await getSiteSettings();
+    const map = quizReleasedMap(settings);
+    wrap.innerHTML = '';
+    Object.keys(QUIZZES_META).forEach(id => {
+      const released = !!map[id];
+      const row = document.createElement('div');
+      row.className = 'admin-lesson-row';
+      row.innerHTML =
+        '<label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">' +
+        '<input type="checkbox" ' + (released ? 'checked' : '') + ' onchange="setQuizReleased(\'' + id + '\', this.checked)"> ' +
+        QUIZZES_META[id].title + '</label>' +
         '<span style="font-size:.78rem; color:' + (released ? 'var(--turquoise-dark)' : 'var(--ink-soft)') + ';">' + (released ? 'متاح' : 'مقفل') + '</span>';
       wrap.appendChild(row);
     });
@@ -1926,6 +2031,7 @@
     renderAuthState();
     renderProgressSection();
     applyLessonLocks();
+    applyQuizLocks();
     applyActivityLinksToLessonCards();
   }
   initFirestoreDependentUI();
