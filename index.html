@@ -1846,18 +1846,36 @@
       video.src = meta.videoSrc;
       video.currentTime = 0;
       video.oncontextmenu = () => false;
+      // يُحسب التقدّم فقط من التشغيل الطبيعي — أي قفزة للأمام تُعاد لآخر نقطة شاهدتها الطالبة فعليًا
       video.ontimeupdate = () => {
-        currentLessonMaxTime = Math.max(currentLessonMaxTime, video.currentTime);
-        if(!videoWatchedEnough && video.duration && video.currentTime / video.duration >= 0.9){
+        if(videoWatchedEnough) return;
+        const t = video.currentTime;
+        if(!video.seeking && t >= currentLessonMaxTime && t - currentLessonMaxTime <= 2){
+          currentLessonMaxTime = t;
+        }else if(t > currentLessonMaxTime + 1){
+          video.currentTime = currentLessonMaxTime;
+          return;
+        }
+        if(video.duration && currentLessonMaxTime / video.duration >= 0.95){
           markVideoWatched(lessonId);
         }
       };
       video.onseeking = () => {
-        if(video.currentTime > currentLessonMaxTime + 0.75){
+        if(!videoWatchedEnough && video.currentTime > currentLessonMaxTime + 1){
           video.currentTime = currentLessonMaxTime;
         }
       };
-      video.onended = () => markVideoWatched(lessonId);
+      video.onratechange = () => {
+        if(!videoWatchedEnough && video.playbackRate > 1) video.playbackRate = 1;
+      };
+      video.onended = () => {
+        if(videoWatchedEnough) return;
+        if(video.duration && currentLessonMaxTime / video.duration >= 0.95){
+          markVideoWatched(lessonId);
+        }else{
+          video.currentTime = currentLessonMaxTime;
+        }
+      };
     }
 
     renderLessonQuestions(meta, userProgress);
