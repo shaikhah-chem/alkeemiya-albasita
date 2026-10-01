@@ -369,15 +369,15 @@
     <div class="auth-success" id="authSuccess"></div>
 
     <form class="auth-form" id="signupForm" onsubmit="return handleSignup(event)">
-      <div class="field"><label>الاسم</label><input type="text" id="suName" required placeholder="اكتبي اسمك"></div>
-      <div class="field"><label>اسم المستخدم</label><input type="text" id="suUsername" required placeholder="بدون مسافات، مثال: sara_2024"></div>
+      <div class="field"><label>اسمك الثلاثي</label><input type="text" id="suName" required placeholder="مثال: سارة محمد العتيبي"></div>
+      <p class="auth-hint" style="text-align:right; margin-top:-6px;">احفظي طريقة كتابة اسمك (مثل: نورة أو نوره) لأنك ستدخلين به كل مرة.</p>
       <div class="field"><label>كلمة المرور</label><input type="password" id="suPass" required placeholder="٦ أحرف على الأقل" minlength="6"></div>
       <button type="submit" class="btn-primary" style="width:100%;">إنشاء الحساب</button>
       <p class="auth-hint">بإنشاء الحساب، أنتِ توافقين على استخدام الموقع لأغراض تعليمية.</p>
     </form>
 
     <form class="auth-form" id="loginForm" onsubmit="return handleLogin(event)">
-      <div class="field"><label>اسم المستخدم</label><input type="text" id="liUsername" required placeholder="اسم المستخدم"></div>
+      <div class="field"><label>اسمك الثلاثي</label><input type="text" id="liUsername" required placeholder="اكتبي اسمك الثلاثي كما سجّلتِ به"></div>
       <div class="field"><label>كلمة المرور</label><input type="password" id="liPass" required placeholder="كلمة المرور"></div>
       <button type="submit" class="btn-primary" style="width:100%;">دخول</button>
       <p class="auth-hint">نسيتِ كلمة المرور؟ <a href="#contact" onclick="closeAuth()" style="color:var(--turquoise-dark); font-weight:700;">تواصلي معنا</a></p>
@@ -960,6 +960,28 @@
     if(username === 'admin') return 'admin@alkeemiya-albasita.com';
     return username + '@students.alkeemiya-albasita.com';
   }
+  // ===== الدخول بالاسم الثلاثي: يُحوَّل الاسم إلى معرّف ثابت (الحسابات القديمة باسم مستخدم إنجليزي ما زالت تعمل) =====
+  function normalizeArabicName(name){
+    return name.trim()
+      .replace(/[\u064B-\u0652\u0640]/g, '')   // التشكيل والتطويل
+      .replace(/[أإآٱ]/g, 'ا')
+      .replace(/ى/g, 'ي')
+      .replace(/ة(?=\s|$)/g, 'ه')
+      .replace(/\s+/g, ' ');
+  }
+  function isLegacyUsername(text){
+    return /^[A-Za-z0-9_.\-]+$/.test(text.trim());
+  }
+  async function nameToUsername(name){
+    const data = new TextEncoder().encode(normalizeArabicName(name));
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return 'n' + Array.from(new Uint8Array(hash)).slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  async function loginIdToEmail(text){
+    const t = text.trim();
+    if(t.toLowerCase() === 'admin' || isLegacyUsername(t)) return usernameToEmail(t.toLowerCase());
+    return usernameToEmail(await nameToUsername(t));
+  }
   function isCurrentUserTeacher(){
     return !!(window.fbCurrentUser && window.fbCurrentUser.uid === TEACHER_UID);
   }
@@ -1078,23 +1100,23 @@
 
   function firebaseAuthErrorToArabic(err){
     const code = (err && err.code) || '';
-    if(code.includes('email-already-in-use')) return 'اسم المستخدم هذا مسجّل مسبقًا. جرّبي تسجيل الدخول.';
+    if(code.includes('email-already-in-use')) return 'هذا الاسم مسجّل مسبقًا. جرّبي تسجيل الدخول، أو إن كانت طالبة أخرى بنفس الاسم أضيفي اسم الجد.';
     if(code.includes('weak-password')) return 'كلمة المرور ضعيفة، اختاري كلمة أقوى (٦ أحرف على الأقل).';
-    if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'اسم المستخدم أو كلمة المرور غير صحيحة.';
-    if(code.includes('invalid-email')) return 'اسم المستخدم يحتوي على رموز غير مقبولة، استخدمي حروفًا وأرقامًا فقط.';
+    if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'الاسم أو كلمة المرور غير صحيحة. تأكدي من كتابة اسمك بنفس الطريقة التي سجّلتِ بها.';
+    if(code.includes('invalid-email')) return 'الاسم يحتوي على رموز غير مقبولة، استخدمي حروفًا فقط.';
     return 'حدث خطأ غير متوقع، حاولي مرة أخرى.';
   }
 
   async function handleSignup(e){
     e.preventDefault();
-    const name = document.getElementById('suName').value.trim();
-    const username = document.getElementById('suUsername').value.trim().toLowerCase().replace(/\s+/g, '');
+    const name = normalizeArabicName(document.getElementById('suName').value);
     const pass = document.getElementById('suPass').value;
 
-    if(!username || username === 'admin'){
-      showAuthError('الرجاء كتابة اسم مستخدم صالح.');
+    if(name.split(' ').length < 3){
+      showAuthError('الرجاء كتابة اسمك الثلاثي كاملًا (الاسم واسم الأب واسم العائلة).');
       return false;
     }
+    const username = await nameToUsername(name);
     if(pass.length < 6){
       showAuthError('كلمة المرور يجب أن تكون ٦ أحرف على الأقل.');
       return false;
@@ -1103,7 +1125,7 @@
     await waitForFirebase();
     try{
       const cred = await window.fbCreateUser(window.fbAuth, usernameToEmail(username), pass);
-      await saveProfile(cred.user.uid, name, username);
+      await saveProfile(cred.user.uid, document.getElementById('suName').value.trim().replace(/\s+/g, ' '), name);
       showAuthSuccess('تم إنشاء حسابك بنجاح، أهلًا بك! ✓');
       setTimeout(closeAuth, 900);
     }catch(err){
@@ -1114,13 +1136,13 @@
 
   async function handleLogin(e){
     e.preventDefault();
-    const username = document.getElementById('liUsername').value.trim().toLowerCase().replace(/\s+/g, '');
+    const loginId = document.getElementById('liUsername').value;
     const pass = document.getElementById('liPass').value;
 
     showAuthSuccess('جارٍ التحقق...');
     await waitForFirebase();
     try{
-      await window.fbSignIn(window.fbAuth, usernameToEmail(username), pass);
+      await window.fbSignIn(window.fbAuth, await loginIdToEmail(loginId), pass);
       showAuthSuccess('تم تسجيل الدخول بنجاح ✓');
       setTimeout(closeAuth, 900);
     }catch(err){
@@ -2194,7 +2216,7 @@
     document.getElementById('printReportContent').innerHTML =
       '<h2>تقرير درجة الأنشطة الصفية — الكيمياء البسيطة</h2>' +
       '<p><b>اسم الطالبة:</b> ' + (profile ? profile.name : (displayName || '')) + '</p>' +
-      '<p><b>اسم المستخدم:</b> ' + (profile ? profile.username : '') + '</p>' +
+      '<p><b>اسم الدخول:</b> ' + (profile ? profile.username : '') + '</p>' +
       '<p><b>التاريخ:</b> ' + today + '</p>' +
       '<table style="width:100%; border-collapse:collapse; margin:16px 0;">' +
       '<thead><tr><th style="border:1px solid #ccc; padding:6px;">الدرس</th><th style="border:1px solid #ccc; padding:6px;">الحالة</th><th style="border:1px solid #ccc; padding:6px;">نتيجة الاختبار</th></tr></thead>' +
