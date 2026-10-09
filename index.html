@@ -894,7 +894,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
-    getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs
+    getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, deleteDoc
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import {
     getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
@@ -921,6 +921,7 @@
   window.fbUpdateDoc = updateDoc;
   window.fbCollection = collection;
   window.fbGetDocs = getDocs;
+  window.fbDeleteDoc = deleteDoc;
 
   window.fbAuth = auth;
   window.fbCreateUser = createUserWithEmailAndPassword;
@@ -1432,7 +1433,23 @@
     });
     const resultEl = document.getElementById('quizResult');
     resultEl.style.display = 'block';
-    resultEl.textContent = 'نتيجتك: ' + score + ' من ' + questions.length + (score === questions.length ? ' — ممتاز! ✓' : '');
+    let extra = '';
+    if(currentQuizId === 'quiz4'){
+      extra = ' — الدرجة: ' + toFive(score, questions.length) + ' من 5';
+      const uid = getCurrentUid();
+      if(uid){
+        try{
+          const prog = await getStudentProgress(uid);
+          const prev = prog.quiz4;
+          // نحتفظ بأعلى نتيجة للطالبة
+          if(!prev || !prev.total || (score / questions.length) > (prev.score / prev.total)){
+            await fsSetDoc('progress', uid, {quiz4: {score: score, total: questions.length}});
+          }
+          renderProgressSection();
+        }catch(e){ console.error(e); }
+      }
+    }
+    resultEl.textContent = 'نتيجتك: ' + score + ' من ' + questions.length + extra + (score === questions.length ? ' — ممتاز! ✓' : '');
   }
 
   // ----- Admin: add questions to any quiz -----
@@ -1951,11 +1968,22 @@
     const uid = getCurrentUid();
     const resultEl = document.getElementById('viewerResult');
     resultEl.style.display = 'block';
-    resultEl.textContent = 'نتيجتك: ' + score + ' من ' + total + (score === total ? ' — ممتاز! ✓' : ' — راجعي الفيديو وحاولي مرة أخرى.');
+    resultEl.textContent = 'نتيجتك: ' + score + ' من ' + total + ' — الدرجة: ' + toFive(score, total) + ' من 5' + (score === total ? ' — ممتاز! ✓' : ' — راجعي الفيديو وحاولي مرة أخرى.');
     if(uid){
       await updateStudentLesson(uid, currentLessonId, {watched:true, score, total, completed: score === total});
       renderProgressSection();
     }
+  }
+
+  // ===== درجات من 5 (المخاليط: المقطع + أسئلته + الاختبار) =====
+  const GRADED_LESSONS = ['l6']; // الدروس المعتمدة في الدرجة النهائية (تُضاف دروس أخرى هنا لاحقًا)
+  function toFive(score, total){
+    if(!total) return 0;
+    return Math.round((score / total) * 5 * 10) / 10;
+  }
+  function quizGradeFive(userProgress){
+    const q = userProgress && userProgress.quiz4;
+    return (q && q.total) ? toFive(q.score, q.total) : null;
   }
 
   // ===== Progress section rendering =====
@@ -1963,7 +1991,13 @@
     userProgress = userProgress || {};
     const lessonIds = Object.keys(LESSONS_META);
     const completedCount = lessonIds.filter(id => userProgress[id] && userProgress[id].completed).length;
-    const grade = (completedCount / lessonIds.length) * 5;
+    // الدرجة من 5 محسوبة من الدروس المعتمدة للتقييم (حاليًا: المخاليط) حسب نتيجة أسئلة الدرس
+    let sum = 0;
+    GRADED_LESSONS.forEach(id => {
+      const p = userProgress[id];
+      if(p && p.total && p.score !== undefined) sum += toFive(p.score, p.total);
+    });
+    const grade = sum / GRADED_LESSONS.length;
     return {grade: Math.round(grade * 10) / 10, completedCount, total: lessonIds.length};
   }
 
@@ -2052,7 +2086,10 @@
       const meta = LESSONS_META[id];
       const p = userProgress[id] || {};
       const status = p.completed ? 'أكملت الاختبار ✓' : (p.watched ? 'شاهدت الفيديو، بانتظار الاختبار' : 'لم تبدأ بعد');
-      const scoreLine = (p.score !== undefined) ? ('النتيجة: ' + p.score + ' / ' + p.total) : '';
+      let scoreLine = (p.score !== undefined) ? ('النتيجة: ' + p.score + ' / ' + p.total + ' (الدرجة: ' + toFive(p.score, p.total) + ' / 5)') : '';
+      if(id === 'l6' && userProgress.quiz4 && userProgress.quiz4.total){
+        scoreLine += (scoreLine ? ' — ' : '') + 'اختبار المخاليط: ' + userProgress.quiz4.score + ' / ' + userProgress.quiz4.total + ' (' + quizGradeFive(userProgress) + ' / 5)';
+      }
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML =
@@ -2084,7 +2121,7 @@
       const name = profile ? profile.name : (profile && profile.username) || uid;
       const username = profile ? profile.username : uid;
       const analysis = computeStudentAnalysis(progress[uid]);
-      return {uid, name, username, grade: analysis.gradeInfo.grade, level: analysis.level, completedCount: analysis.gradeInfo.completedCount, total: analysis.gradeInfo.total};
+      return {uid, name, username, grade: analysis.gradeInfo.grade, quizGrade: quizGradeFive(progress[uid]), level: analysis.level, completedCount: analysis.gradeInfo.completedCount, total: analysis.gradeInfo.total};
     });
     list.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
     return list;
@@ -2188,14 +2225,35 @@
     let rows = '';
     students.forEach((s, i) => {
       rows += '<div class="admin-lesson-row">' +
-        '<span>' + (i+1) + '. ' + s.name + ' <span style="color:var(--ink-soft); font-size:.78rem;">(' + s.level + ')</span></span>' +
+        '<span><label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="stu-del-check" value="' + s.uid + '"> ' + (i+1) + '. ' + s.name + '</label> <span style="color:var(--ink-soft); font-size:.78rem;">(' + s.level + ')</span></span>' +
         '<span style="display:flex; align-items:center; gap:10px;">' +
         '<span style="font-weight:700; color:var(--turquoise-dark);">' + s.grade + ' / 5</span>' +
         '<button onclick="openPrintReportForUid(\'' + s.uid + '\')" style="color:var(--blue-deep);">عرض التقرير</button>' +
         '</span></div>';
     });
-    wrap.innerHTML = rows;
+    wrap.innerHTML = rows +
+      '<button class="btn-secondary" style="width:100%; margin-top:12px; color:#B42318; border-color:#B42318;" onclick="deleteSelectedStudents()">🗑️ حذف الطالبات المحددات (للأسماء التجريبية)</button>' +
+      '<p class="auth-hint" style="text-align:right;">ضعي علامة ✓ بجانب الأسماء التجريبية فقط ثم اضغطي الحذف. يُحذف سجل الطالبة المحددة (درجاتها وتقدّمها)، وتبقى بقية الطالبات كما هن.</p>';
     printBtn.style.display = 'block';
+  }
+
+  async function deleteSelectedStudents(){
+    if(!isCurrentUserTeacher()){ alert('هذه الخاصية لحساب المعلمة فقط.'); return; }
+    const checks = Array.from(document.querySelectorAll('.stu-del-check:checked'));
+    if(!checks.length){ alert('حدّدي اسمًا واحدًا على الأقل أولًا.'); return; }
+    const names = checks.map(c => c.closest('label').textContent.trim());
+    if(!confirm('سيتم حذف سجلات ' + checks.length + ' طالبة نهائيًا (الدرجات والتقدّم):\n\n' + names.join('\n') + '\n\nهل أنتِ متأكدة؟')) return;
+    let ok = 0, failed = 0;
+    for(const c of checks){
+      try{
+        await waitForFirebase();
+        await window.fbDeleteDoc(window.fbDoc(window.fbDB, 'progress', c.value));
+        await window.fbDeleteDoc(window.fbDoc(window.fbDB, 'profiles', c.value));
+        ok++;
+      }catch(e){ console.error(e); failed++; }
+    }
+    alert('تم حذف ' + ok + ' سجل' + (failed ? ('، وتعذّر حذف ' + failed + ' (قد تمنعه صلاحيات قاعدة البيانات)') : '') + '.');
+    renderAllStudentsReport();
   }
 
   async function openPrintAllStudents(){
@@ -2203,13 +2261,13 @@
     const today = new Date().toLocaleDateString('ar-SA');
     let rowsHtml = '';
     students.forEach((s, i) => {
-      rowsHtml += '<tr><td>' + (i+1) + '</td><td>' + s.name + '</td><td>' + s.completedCount + ' / ' + s.total + '</td><td>' + s.grade + ' / 5</td><td>' + s.level + '</td></tr>';
+      rowsHtml += '<tr><td>' + (i+1) + '</td><td>' + s.name + '</td><td>' + s.completedCount + ' / ' + s.total + '</td><td>' + s.grade + ' / 5</td><td>' + (s.quizGrade === null ? '—' : s.quizGrade + ' / 5') + '</td><td>' + s.level + '</td></tr>';
     });
     document.getElementById('printReportContent').innerHTML =
       '<h2>تقرير درجات الأنشطة الصفية — جميع الطالبات</h2>' +
       '<p><b>التاريخ:</b> ' + today + '</p>' +
       '<table style="width:100%; border-collapse:collapse; margin:16px 0;">' +
-      '<thead><tr><th style="border:1px solid #ccc; padding:6px;">م</th><th style="border:1px solid #ccc; padding:6px;">اسم الطالبة</th><th style="border:1px solid #ccc; padding:6px;">الدروس المكتملة</th><th style="border:1px solid #ccc; padding:6px;">الدرجة النهائية</th><th style="border:1px solid #ccc; padding:6px;">التصنيف</th></tr></thead>' +
+      '<thead><tr><th style="border:1px solid #ccc; padding:6px;">م</th><th style="border:1px solid #ccc; padding:6px;">اسم الطالبة</th><th style="border:1px solid #ccc; padding:6px;">الدروس المكتملة</th><th style="border:1px solid #ccc; padding:6px;">الدرجة النهائية</th><th style="border:1px solid #ccc; padding:6px;">اختبار المخاليط</th><th style="border:1px solid #ccc; padding:6px;">التصنيف</th></tr></thead>' +
       '<tbody>' + rowsHtml + '</tbody></table>';
 
     document.body.classList.add('printing-report');
@@ -2226,9 +2284,11 @@
       const meta = LESSONS_META[id];
       const p = progress[id] || {};
       const status = p.completed ? 'مكتمل ✓' : (p.watched ? 'شاهدت الفيديو فقط' : 'لم تبدأ');
-      const score = (p.score !== undefined) ? (p.score + ' / ' + p.total) : '—';
+      const score = (p.score !== undefined) ? (p.score + ' / ' + p.total + ' (' + toFive(p.score, p.total) + ' / 5)') : '—';
       rowsHtml += '<tr><td>' + meta.title + '</td><td>' + status + '</td><td>' + score + '</td></tr>';
     });
+    const qg = quizGradeFive(progress);
+    rowsHtml += '<tr><td>اختبار المخاليط</td><td>' + (qg === null ? 'لم يُجرَ' : 'تم') + '</td><td>' + (qg === null ? '—' : (progress.quiz4.score + ' / ' + progress.quiz4.total + ' (' + qg + ' / 5)')) + '</td></tr>';
 
     const today = new Date().toLocaleDateString('ar-SA');
     document.getElementById('printReportContent').innerHTML =
