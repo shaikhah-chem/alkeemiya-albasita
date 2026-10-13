@@ -313,8 +313,6 @@
   /* ===== Locked lessons ===== */
   .card.locked-lesson{opacity:.55; filter:grayscale(.3);}
   .card.locked-lesson .lesson-open-btn{color:var(--ink-soft); cursor:not-allowed;}
-  .quiz-card.locked-quiz{opacity:.55; filter:grayscale(.3);}
-  .quiz-card.locked-quiz .quiz-btn{background:var(--ink-soft); cursor:not-allowed;}
 
   /* ===== Print report ===== */
   @media print{
@@ -369,15 +367,15 @@
     <div class="auth-success" id="authSuccess"></div>
 
     <form class="auth-form" id="signupForm" onsubmit="return handleSignup(event)">
-      <div class="field"><label>اسمك الثلاثي</label><input type="text" id="suName" required placeholder="مثال: سارة محمد العتيبي"></div>
-      <p class="auth-hint" style="text-align:right; margin-top:-6px;">احفظي طريقة كتابة اسمك (مثل: نورة أو نوره) لأنك ستدخلين به كل مرة.</p>
+      <div class="field"><label>الاسم</label><input type="text" id="suName" required placeholder="اكتبي اسمك"></div>
+      <div class="field"><label>اسم المستخدم</label><input type="text" id="suUsername" required placeholder="بدون مسافات، مثال: sara_2024"></div>
       <div class="field"><label>كلمة المرور</label><input type="password" id="suPass" required placeholder="٦ أحرف على الأقل" minlength="6"></div>
       <button type="submit" class="btn-primary" style="width:100%;">إنشاء الحساب</button>
       <p class="auth-hint">بإنشاء الحساب، أنتِ توافقين على استخدام الموقع لأغراض تعليمية.</p>
     </form>
 
     <form class="auth-form" id="loginForm" onsubmit="return handleLogin(event)">
-      <div class="field"><label>اسمك الثلاثي</label><input type="text" id="liUsername" required placeholder="اكتبي اسمك الثلاثي كما سجّلتِ به"></div>
+      <div class="field"><label>اسم المستخدم</label><input type="text" id="liUsername" required placeholder="اسم المستخدم"></div>
       <div class="field"><label>كلمة المرور</label><input type="password" id="liPass" required placeholder="كلمة المرور"></div>
       <button type="submit" class="btn-primary" style="width:100%;">دخول</button>
       <p class="auth-hint">نسيتِ كلمة المرور؟ <a href="#contact" onclick="closeAuth()" style="color:var(--turquoise-dark); font-weight:700;">تواصلي معنا</a></p>
@@ -422,11 +420,11 @@
         <select id="mvLessonSelect" style="width:100%; padding:13px 16px; border-radius:10px; border:1.5px solid var(--border); font-family:'Tajawal'; background:var(--bg);"></select>
       </div>
       <div class="field">
-        <label>رابط فيديو مباشر (mp4) — يعمل لكل الطالبات بشكل دائم ✅</label>
+        <label>رابط فيديو مباشر (mp4) — يعمل لكل الطالبات بشكل دائم</label>
         <input type="url" id="mvVideoUrl" placeholder="https://example.com/lesson1.mp4">
       </div>
       <div class="field">
-        <label>أو مقطع من جهازك — للتجربة عندك فقط ⚠️ لا يظهر للطالبات</label>
+        <label>أو ارفعي مقطعًا من جهازك — معاينة في هذا المتصفح فقط، تُفقد عند إعادة تحميل الصفحة</label>
         <input type="file" id="mvVideoFile" accept="video/*">
       </div>
       <button class="btn-secondary" onclick="setLessonVideo()">حفظ فيديو الدرس</button>
@@ -472,10 +470,6 @@
       <h3 style="font-size:1rem; color:var(--blue-deep);">التحكم بإتاحة الدروس للطالبات</h3>
       <p class="auth-hint" style="text-align:right;">فعّلي فقط الدرس اللي انتهيتِ من شرحه وأضفتِ فيديوه — الباقي يبقى مقفلًا للطالبات تلقائيًا حتى تفعّلينه.</p>
       <div class="admin-lesson-list" id="releaseList"></div>
-
-      <h3 style="font-size:1rem; color:var(--blue-deep); margin-top:10px;">التحكم بإتاحة الاختبارات للطالبات</h3>
-      <p class="auth-hint" style="text-align:right;">الاختبار غير المفعّل يظهر للطالبات مقفلًا. (اختبار المخاليط مفعّل افتراضيًا)</p>
-      <div class="admin-lesson-list" id="quizReleaseList"></div>
 
       <hr style="border:none; border-top:1px solid var(--border); margin:8px 0;">
 
@@ -894,7 +888,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
   import {
-    getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, deleteDoc
+    getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs
   } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   import {
     getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
@@ -921,7 +915,6 @@
   window.fbUpdateDoc = updateDoc;
   window.fbCollection = collection;
   window.fbGetDocs = getDocs;
-  window.fbDeleteDoc = deleteDoc;
 
   window.fbAuth = auth;
   window.fbCreateUser = createUserWithEmailAndPassword;
@@ -960,28 +953,6 @@
   function usernameToEmail(username){
     if(username === 'admin') return 'admin@alkeemiya-albasita.com';
     return username + '@students.alkeemiya-albasita.com';
-  }
-  // ===== الدخول بالاسم الثلاثي: يُحوَّل الاسم إلى معرّف ثابت (الحسابات القديمة باسم مستخدم إنجليزي ما زالت تعمل) =====
-  function normalizeArabicName(name){
-    return name.trim()
-      .replace(/[\u064B-\u0652\u0640]/g, '')   // التشكيل والتطويل
-      .replace(/[أإآٱ]/g, 'ا')
-      .replace(/ى/g, 'ي')
-      .replace(/ة(?=\s|$)/g, 'ه')
-      .replace(/\s+/g, ' ');
-  }
-  function isLegacyUsername(text){
-    return /^[A-Za-z0-9_.\-]+$/.test(text.trim());
-  }
-  async function nameToUsername(name){
-    const data = new TextEncoder().encode(normalizeArabicName(name));
-    const hash = await crypto.subtle.digest('SHA-256', data);
-    return 'n' + Array.from(new Uint8Array(hash)).slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-  async function loginIdToEmail(text){
-    const t = text.trim();
-    if(t.toLowerCase() === 'admin' || isLegacyUsername(t)) return usernameToEmail(t.toLowerCase());
-    return usernameToEmail(await nameToUsername(t));
   }
   function isCurrentUserTeacher(){
     return !!(window.fbCurrentUser && window.fbCurrentUser.uid === TEACHER_UID);
@@ -1101,23 +1072,23 @@
 
   function firebaseAuthErrorToArabic(err){
     const code = (err && err.code) || '';
-    if(code.includes('email-already-in-use')) return 'هذا الاسم مسجّل مسبقًا. جرّبي تسجيل الدخول، أو إن كانت طالبة أخرى بنفس الاسم أضيفي اسم الجد.';
+    if(code.includes('email-already-in-use')) return 'اسم المستخدم هذا مسجّل مسبقًا. جرّبي تسجيل الدخول.';
     if(code.includes('weak-password')) return 'كلمة المرور ضعيفة، اختاري كلمة أقوى (٦ أحرف على الأقل).';
-    if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'الاسم أو كلمة المرور غير صحيحة. تأكدي من كتابة اسمك بنفس الطريقة التي سجّلتِ بها.';
-    if(code.includes('invalid-email')) return 'الاسم يحتوي على رموز غير مقبولة، استخدمي حروفًا فقط.';
+    if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+    if(code.includes('invalid-email')) return 'اسم المستخدم يحتوي على رموز غير مقبولة، استخدمي حروفًا وأرقامًا فقط.';
     return 'حدث خطأ غير متوقع، حاولي مرة أخرى.';
   }
 
   async function handleSignup(e){
     e.preventDefault();
-    const name = normalizeArabicName(document.getElementById('suName').value);
+    const name = document.getElementById('suName').value.trim();
+    const username = document.getElementById('suUsername').value.trim().toLowerCase().replace(/\s+/g, '');
     const pass = document.getElementById('suPass').value;
 
-    if(name.split(' ').length < 3){
-      showAuthError('الرجاء كتابة اسمك الثلاثي كاملًا (الاسم واسم الأب واسم العائلة).');
+    if(!username || username === 'admin'){
+      showAuthError('الرجاء كتابة اسم مستخدم صالح.');
       return false;
     }
-    const username = await nameToUsername(name);
     if(pass.length < 6){
       showAuthError('كلمة المرور يجب أن تكون ٦ أحرف على الأقل.');
       return false;
@@ -1126,7 +1097,7 @@
     await waitForFirebase();
     try{
       const cred = await window.fbCreateUser(window.fbAuth, usernameToEmail(username), pass);
-      await saveProfile(cred.user.uid, document.getElementById('suName').value.trim().replace(/\s+/g, ' '), name);
+      await saveProfile(cred.user.uid, name, username);
       showAuthSuccess('تم إنشاء حسابك بنجاح، أهلًا بك! ✓');
       setTimeout(closeAuth, 900);
     }catch(err){
@@ -1137,13 +1108,13 @@
 
   async function handleLogin(e){
     e.preventDefault();
-    const loginId = document.getElementById('liUsername').value;
+    const username = document.getElementById('liUsername').value.trim().toLowerCase().replace(/\s+/g, '');
     const pass = document.getElementById('liPass').value;
 
     showAuthSuccess('جارٍ التحقق...');
     await waitForFirebase();
     try{
-      await window.fbSignIn(window.fbAuth, await loginIdToEmail(loginId), pass);
+      await window.fbSignIn(window.fbAuth, usernameToEmail(username), pass);
       showAuthSuccess('تم تسجيل الدخول بنجاح ✓');
       setTimeout(closeAuth, 900);
     }catch(err){
@@ -1181,7 +1152,6 @@
     renderAuthState();
     if(typeof renderProgressSection === 'function') renderProgressSection();
     if(typeof applyLessonLocks === 'function') applyLessonLocks();
-    if(typeof applyQuizLocks === 'function') applyQuizLocks();
   });
 
   // ===== Admin panel: add/manage lessons (shared via Firestore, protected by TEACHER_UID) =====
@@ -1191,7 +1161,7 @@
     document.getElementById('adminOverlay').classList.add('open');
     document.getElementById('adminGateStep').classList.toggle('active', !isTeacher);
     document.getElementById('adminFormStep').classList.toggle('active', isTeacher);
-    if(isTeacher){ renderAdminList(); populateLessonSelect(); populateQuizSelect(); renderQuizAdminList(); renderAdminReleaseList(); renderAdminQuizReleaseList(); populateActivityLessonSelect(); }
+    if(isTeacher){ renderAdminList(); populateLessonSelect(); populateQuizSelect(); renderQuizAdminList(); renderAdminReleaseList(); populateActivityLessonSelect(); }
   }
   function closeAdmin(){ document.getElementById('adminOverlay').classList.remove('open'); }
 
@@ -1210,31 +1180,18 @@
     const url = document.getElementById('mvVideoUrl').value.trim();
     const fileInput = document.getElementById('mvVideoFile');
     const successEl = document.getElementById('mvSuccess');
-    const hasFile = fileInput.files && fileInput.files[0];
-    successEl.className = 'auth-success';
 
-    // الرابط له الأولوية دائمًا لأنه الوحيد الذي يُحفظ لكل الطالبات
-    if(url){
-      if(/drive\.google\.com|youtube\.com|youtu\.be/i.test(url)){
-        successEl.className = 'auth-error';
-        successEl.textContent = '⚠️ لم يُحفظ: روابط Google Drive و YouTube لا تعمل داخل مشغّل الدرس. ارفعي ملف الفيديو (mp4) إلى مستودع الموقع على GitHub، ثم ضعي رابطه هنا مثل: https://shaikhah-chem.github.io/alkeemiya-albasita/اسم-الملف.mp4';
-        successEl.style.display = 'block';
-        return;
-      }
+    if(fileInput.files && fileInput.files[0]){
+      const blobUrl = URL.createObjectURL(fileInput.files[0]);
+      LESSONS_META[id].videoSrc = blobUrl;
+      successEl.textContent = 'تم ضبط المقطع للمعاينة في هذا المتصفح فقط — سيُفقد عند إعادة تحميل الصفحة. ارفعي الملف لاستضافة حقيقية للنشر الدائم.';
+    }else if(url){
       LESSONS_META[id].videoSrc = url;
       const settings = await getSiteSettings();
       const savedUrls = settings.lessonVideos || {};
       savedUrls[id] = url;
       await updateSiteSettings({lessonVideos: savedUrls});
-      fileInput.value = '';
-      successEl.textContent = hasFile
-        ? 'تم حفظ الرابط بشكل دائم لكل الطالبات ✓ (تم تجاهل الملف المختار من جهازك لأنه للتجربة فقط)'
-        : 'تم حفظ رابط الفيديو لهذا الدرس بشكل دائم لكل الطالبات ✓';
-    }else if(hasFile){
-      const blobUrl = URL.createObjectURL(fileInput.files[0]);
-      LESSONS_META[id].videoSrc = blobUrl;
-      successEl.className = 'auth-error';
-      successEl.textContent = '⚠️ انتبهي: هذا المقطع للتجربة عندك فقط — لن يظهر للطالبات ويختفي عند تحديث الصفحة. لنشره للطالبات ضعي رابط الفيديو في الخانة الأولى.';
+      successEl.textContent = 'تم حفظ رابط الفيديو لهذا الدرس بشكل دائم لكل الطالبات ✓';
     }else{
       successEl.style.display = 'none';
       return;
@@ -1272,23 +1229,21 @@
     if(cfg.videoField){
       const videoUrl = document.getElementById(cfg.videoField).value.trim();
       const videoFileInput = document.getElementById(cfg.videoFileField);
-      if(videoUrl){
-        entry.video = videoUrl;
-        videoFileInput.value = '';
-      }else if(videoFileInput.files && videoFileInput.files[0]){
+      if(videoFileInput.files && videoFileInput.files[0]){
         entry.video = URL.createObjectURL(videoFileInput.files[0]);
         localOnly = true;
+      }else if(videoUrl){
+        entry.video = videoUrl;
       }
     }
 
     const fileUrl = document.getElementById(cfg.fileField).value.trim();
     const fileFileInput = document.getElementById(cfg.fileFileField);
-    if(fileUrl){
-      entry.file = fileUrl;
-      fileFileInput.value = '';
-    }else if(fileFileInput.files && fileFileInput.files[0]){
+    if(fileFileInput.files && fileFileInput.files[0]){
       entry.file = URL.createObjectURL(fileFileInput.files[0]);
       localOnly = true;
+    }else if(fileUrl){
+      entry.file = fileUrl;
     }
 
     map[id] = entry;
@@ -1352,23 +1307,7 @@
     quiz1: {title:'اختبار: الكيمياء والمادة'},
     quiz2: {title:'اختبار: الطرائق العلمية والبحث العلمي'},
     quiz3: {title:'اختبار: خواص المادة وتغيراتها'},
-    quiz4: {title:'اختبار شامل: المخاليط', questions:[
-      {q:'توجد معظم المواد المألوفة من حولنا على شكل؟', options:['عناصر نقية','مخاليط','مركبات فقط','أيونات'], correct:1},
-      {q:'المادة ذات التركيب المنتظم والثابت تُسمى؟', options:['مخلوطًا','محلولًا','مادة نقية','سبيكة'], correct:2},
-      {q:'لماذا يمكننا فصل مكونات السلطة بينما لا يمكن فصل مكونات الكعك؟', options:['لأن السلطة مخلوط تحتفظ مكوناته بخواصها، أما الكعك فحدث فيه تغيّر كيميائي','لأن السلطة مادة نقية','لأن الكعك مخلوط متجانس','لأن مكونات السلطة متحدة كيميائيًا'], correct:0},
-      {q:'عند إضافة الملح إلى الماء؟', options:['يحدث تفاعل كيميائي وتتكوّن مادة جديدة','لا يحدث تفاعل كيميائي ويتكوّن مخلوط','يتحول الملح إلى عنصر','يفقد الماء خواصه'], correct:1},
-      {q:'عصير البرتقال الطبيعي بلبّه يُصنَّف على أنه؟', options:['مخلوط متجانس','مخلوط غير متجانس','مادة نقية','عنصر'], correct:1},
-      {q:'المكسرات المشكلة تُصنَّف على أنها؟', options:['مخلوط غير متجانس','مخلوط متجانس','محلول','مركب'], correct:0},
-      {q:'المحاليل هي نفسها؟', options:['المخاليط غير المتجانسة','المخاليط المتجانسة','المركبات','العناصر'], correct:1},
-      {q:'ثاني أكسيد الكربون والأكسجين الذائبان في ماء البحر محلول من نوع؟', options:['غاز - غاز','سائل - غاز','صلب - سائل','سائل - سائل'], correct:1},
-      {q:'الأملاح الصلبة الذائبة في ماء البحر محلول من نوع؟', options:['سائل - صلب','غاز - سائل','صلب - صلب','غاز - غاز'], correct:0},
-      {q:'في سبيكة النحاس الأصفر، يكون النحاس هو المذيب لأنه؟', options:['المكوّن الأقل كمية','المكوّن الأكثر كمية','غاز','لا يذوب'], correct:1},
-      {q:'لفصل برادة الحديد عن الرمل نستخدم؟', options:['التقطير','المغناطيس','الكروماتوجرافيا','التبلور'], correct:1},
-      {q:'تعتمد طريقة التبخير على؟', options:['تسخين المحلول ليتبخر السائل وتبقى المادة الصلبة المذابة','انجذاب المواد للمغناطيس','اختلاف حجم الجسيمات','تحوّل الصلب إلى غاز مباشرة'], correct:0},
-      {q:'تعتمد طريقة التبلور على؟', options:['اختلاف درجات الغليان','اختلاف الذائبية وتغيرها مع درجة الحرارة','اختلاف اللون والحجم','الانجذاب للمغناطيس'], correct:1},
-      {q:'لفصل اليود عن الرمل نستخدم طريقة؟', options:['الترشيح','التقطير','التسامي','التبخير'], correct:2},
-      {q:'لفصل ألوان (أصباغ) حبر قلم ملوّن نستخدم؟', options:['الكروماتوجرافيا','الترشيح','المغناطيس','التسامي'], correct:0}
-    ]},
+    quiz4: {title:'اختبار شامل: المخاليط'},
     tah_c1_1: {title:'تحصيلي: كيمياء 1'},
     tah_c21_1: {title:'تحصيلي: كيمياء 2-1'},
     tah_c22_1: {title:'تحصيلي: كيمياء 2-2'},
@@ -1378,8 +1317,7 @@
   async function getQuestionsFor(quizId){
     const settings = await getSiteSettings();
     const extra = settings.quizExtra || {};
-    const builtIn = (QUIZZES_META[quizId] && QUIZZES_META[quizId].questions) || [];
-    return builtIn.concat(extra[quizId] || []);
+    return extra[quizId] || [];
   }
 
   let currentQuizId = null;
@@ -1387,7 +1325,6 @@
   async function openQuiz(quizId){
     const meta = QUIZZES_META[quizId];
     if(!meta) return;
-    if(!isCurrentUserTeacher() && !quizReleasedMap(await getSiteSettings())[quizId]) return; // الاختبار مقفل
     currentQuizId = quizId;
     document.getElementById('quizModalTitle').textContent = meta.title;
     document.getElementById('quizOverlay').classList.add('open');
@@ -1433,23 +1370,7 @@
     });
     const resultEl = document.getElementById('quizResult');
     resultEl.style.display = 'block';
-    let extra = '';
-    if(currentQuizId === 'quiz4'){
-      extra = ' — الدرجة: ' + toFive(score, questions.length) + ' من 5';
-      const uid = getCurrentUid();
-      if(uid){
-        try{
-          const prog = await getStudentProgress(uid);
-          const prev = prog.quiz4;
-          // نحتفظ بأعلى نتيجة للطالبة
-          if(!prev || !prev.total || (score / questions.length) > (prev.score / prev.total)){
-            await fsSetDoc('progress', uid, {quiz4: {score: score, total: questions.length}});
-          }
-          renderProgressSection();
-        }catch(e){ console.error(e); }
-      }
-    }
-    resultEl.textContent = 'نتيجتك: ' + score + ' من ' + questions.length + extra + (score === questions.length ? ' — ممتاز! ✓' : '');
+    resultEl.textContent = 'نتيجتك: ' + score + ' من ' + questions.length + (score === questions.length ? ' — ممتاز! ✓' : '');
   }
 
   // ----- Admin: add questions to any quiz -----
@@ -1512,11 +1433,8 @@
     if(!wrap) return;
     wrap.innerHTML = '<p class="auth-hint">جارٍ التحميل...</p>';
     const selectedQuiz = document.getElementById('qaQuizSelect').value;
-    const settings = await getSiteSettings();
-    const questions = (settings.quizExtra || {})[selectedQuiz] || [];
-    const builtInCount = ((QUIZZES_META[selectedQuiz] || {}).questions || []).length;
-    wrap.innerHTML = (builtInCount ? '<p class="auth-hint">يحتوي هذا الاختبار على ' + builtInCount + ' سؤالًا أساسيًا جاهزًا، وما تضيفينه هنا يُضاف بعدها.</p>' : '') +
-      (questions.length ? '' : '<p class="auth-hint">لا توجد أسئلة مضافة منكِ لهذا الاختبار بعد.</p>');
+    const questions = await getQuestionsFor(selectedQuiz);
+    wrap.innerHTML = questions.length ? '' : '<p class="auth-hint">لا توجد أسئلة مضافة لهذا الاختبار بعد.</p>';
     questions.forEach(q => {
       const row = document.createElement('div');
       row.className = 'admin-lesson-row';
@@ -1657,20 +1575,10 @@
     },
     l6: {
       title: 'المخاليط',
-      videoSrc: 'https://shaikhah-chem.github.io/alkeemiya-albasita/mixtures.mp4',
+      videoSrc: '',
       questions: [
         {q:'الماء والملح بعد الذوبان يُشكلان؟', options:['مخلوطًا غير متجانس','مخلوطًا متجانسًا','مركبًا كيميائيًا جديدًا','عنصرًا نقيًا'], correct:1},
-        {q:'من طرق فصل مكوّنات المخاليط؟', options:['التفاعل الكيميائي','الترشيح والتبخير','الاحتراق','التحليل الكهربائي فقط'], correct:1},
-        {q:'المخلوط هو؟', options:['مادة نقية ذات تركيب ثابت','مادتان أو أكثر متحدتان كيميائيًا','مادتان أو أكثر غير متحدتين كيميائيًا','عنصر واحد فقط'], correct:2},
-        {q:'عند خلط برادة الحديد مع الرمل، فإن كل مادة؟', options:['تفقد خواصها الأصلية','تحتفظ بخواصها الأصلية','تتحول إلى مادة جديدة','تتفاعل مع الأخرى كيميائيًا'], correct:1},
-        {q:'أي مما يلي يُعد مخلوطًا غير متجانس؟', options:['الهواء','الشاي','الماء والملح','الزيت والماء'], correct:3},
-        {q:'المخلوط الذي تتوزع مكوناته بانتظام ولا يمكن تمييزها ويظهر كمادة واحدة يُسمى؟', options:['مخلوطًا متجانسًا','مخلوطًا غير متجانس','مركبًا','عنصرًا'], correct:0},
-        {q:'الهواء في أسطوانة الغوص مثال على محلول من نوع؟', options:['صلب - صلب','غاز - غاز','سائل - سائل','غاز - سائل'], correct:1},
-        {q:'السبيكة (مثل النحاس الأصفر) هي محلول من نوع؟', options:['صلب - صلب','صلب - سائل','غاز - صلب','سائل - سائل'], correct:0},
-        {q:'تعتمد طريقة الترشيح على؟', options:['اختلاف درجات الغليان','اختلاف حجم الجسيمات وقابليتها للمرور من ورقة الترشيح','اختلاف الذائبية مع درجة الحرارة','الانجذاب للمغناطيس'], correct:1},
-        {q:'لفصل الإيثانول عن الماء نستخدم طريقة؟', options:['الترشيح','التسامي','التقطير','المغناطيس'], correct:2},
-        {q:'تعتمد الكروماتوجرافيا على؟', options:['اختلاف سرعة انتقال المكونات مع الطور الثابت والمتحرك','اختلاف درجات الغليان','تحوّل الصلب إلى غاز مباشرة','اختلاف حجم الجسيمات'], correct:0},
-        {q:'تحوّل المادة الصلبة إلى غاز مباشرة دون المرور بالحالة السائلة يُسمى؟', options:['التبلور','التقطير','التبخير','التسامي'], correct:3}
+        {q:'من طرق فصل مكوّنات المخاليط؟', options:['التفاعل الكيميائي','الترشيح والتبخير','الاحتراق','التحليل الكهربائي فقط'], correct:1}
       ]
     }
   };
@@ -1685,27 +1593,22 @@
   }
 
   // ===== Lesson release/lock control (teacher releases lessons one at a time, shared across devices) =====
-  const LESSON_DEFAULT_RELEASED = {l6: true}; // درس المخاليط متاح افتراضيًا ما لم تغيّره المعلمة
-  function lessonReleasedMap(settings){
-    return Object.assign({}, LESSON_DEFAULT_RELEASED, settings.lessonReleased || {});
-  }
   async function isLessonReleased(lessonId){
     const settings = await getSiteSettings();
-    const map = lessonReleasedMap(settings);
+    const map = settings.lessonReleased || {};
     return !!map[lessonId]; // غير موجود = غير متاح افتراضيًا
   }
   async function setLessonReleased(lessonId, released){
     const settings = await getSiteSettings();
-    const map = Object.assign({}, settings.lessonReleased || {});
+    const map = settings.lessonReleased || {};
     map[lessonId] = released;
     await updateSiteSettings({lessonReleased: map});
     applyLessonLocks();
-    applyQuizLocks();
   }
 
   async function applyLessonLocks(){
     const settings = await getSiteSettings();
-    const map = lessonReleasedMap(settings);
+    const map = settings.lessonReleased || {};
     Object.keys(LESSONS_META).forEach(id => {
       const btn = document.querySelector('.lesson-open-btn[data-lesson="' + id + '"]');
       if(!btn) return;
@@ -1732,7 +1635,7 @@
     if(!wrap) return;
     wrap.innerHTML = '<p class="auth-hint">جارٍ التحميل...</p>';
     const settings = await getSiteSettings();
-    const map = lessonReleasedMap(settings);
+    const map = settings.lessonReleased || {};
     wrap.innerHTML = '';
     Object.keys(LESSONS_META).forEach(id => {
       const released = !!map[id];
@@ -1742,53 +1645,6 @@
         '<label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">' +
         '<input type="checkbox" ' + (released ? 'checked' : '') + ' onchange="setLessonReleased(\'' + id + '\', this.checked); renderAdminReleaseList();"> ' +
         LESSONS_META[id].title + '</label>' +
-        '<span style="font-size:.78rem; color:' + (released ? 'var(--turquoise-dark)' : 'var(--ink-soft)') + ';">' + (released ? 'متاح' : 'مقفل') + '</span>';
-      wrap.appendChild(row);
-    });
-  }
-
-  // ===== Quiz release/lock control =====
-  const QUIZ_DEFAULT_RELEASED = {quiz4: true}; // المتاح افتراضيًا ما لم تغيّره المعلمة
-  function quizReleasedMap(settings){
-    return Object.assign({}, QUIZ_DEFAULT_RELEASED, settings.quizReleased || {});
-  }
-  async function setQuizReleased(quizId, released){
-    const settings = await getSiteSettings();
-    const map = Object.assign({}, settings.quizReleased || {});
-    map[quizId] = released;
-    await updateSiteSettings({quizReleased: map});
-    applyQuizLocks(); renderAdminQuizReleaseList();
-  }
-  async function applyQuizLocks(){
-    const settings = await getSiteSettings();
-    const map = quizReleasedMap(settings);
-    Object.keys(QUIZZES_META).forEach(id => {
-      document.querySelectorAll('.quiz-btn[onclick*="\'' + id + '\'"]').forEach(btn => {
-        const card = btn.closest('.quiz-card');
-        if(map[id]){
-          card.classList.remove('locked-quiz'); btn.textContent = 'ابدئي الاختبار'; btn.disabled = false;
-        }else if(isCurrentUserTeacher()){
-          card.classList.remove('locked-quiz'); btn.textContent = '🔒 معاينة (مقفل للطالبات)'; btn.disabled = false;
-        }else{
-          card.classList.add('locked-quiz'); btn.textContent = '🔒 لم يُطرح بعد'; btn.disabled = true;
-        }
-      });
-    });
-  }
-  async function renderAdminQuizReleaseList(){
-    const wrap = document.getElementById('quizReleaseList');
-    if(!wrap) return;
-    const settings = await getSiteSettings();
-    const map = quizReleasedMap(settings);
-    wrap.innerHTML = '';
-    Object.keys(QUIZZES_META).forEach(id => {
-      const released = !!map[id];
-      const row = document.createElement('div');
-      row.className = 'admin-lesson-row';
-      row.innerHTML =
-        '<label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">' +
-        '<input type="checkbox" ' + (released ? 'checked' : '') + ' onchange="setQuizReleased(\'' + id + '\', this.checked)"> ' +
-        QUIZZES_META[id].title + '</label>' +
         '<span style="font-size:.78rem; color:' + (released ? 'var(--turquoise-dark)' : 'var(--ink-soft)') + ';">' + (released ? 'متاح' : 'مقفل') + '</span>';
       wrap.appendChild(row);
     });
@@ -1863,36 +1719,18 @@
       video.src = meta.videoSrc;
       video.currentTime = 0;
       video.oncontextmenu = () => false;
-      // يُحسب التقدّم فقط من التشغيل الطبيعي — أي قفزة للأمام تُعاد لآخر نقطة شاهدتها الطالبة فعليًا
       video.ontimeupdate = () => {
-        if(videoWatchedEnough) return;
-        const t = video.currentTime;
-        if(!video.seeking && t >= currentLessonMaxTime && t - currentLessonMaxTime <= 2){
-          currentLessonMaxTime = t;
-        }else if(t > currentLessonMaxTime + 1){
-          video.currentTime = currentLessonMaxTime;
-          return;
-        }
-        if(video.duration && currentLessonMaxTime / video.duration >= 0.95){
+        currentLessonMaxTime = Math.max(currentLessonMaxTime, video.currentTime);
+        if(!videoWatchedEnough && video.duration && video.currentTime / video.duration >= 0.9){
           markVideoWatched(lessonId);
         }
       };
       video.onseeking = () => {
-        if(!videoWatchedEnough && video.currentTime > currentLessonMaxTime + 1){
+        if(video.currentTime > currentLessonMaxTime + 0.75){
           video.currentTime = currentLessonMaxTime;
         }
       };
-      video.onratechange = () => {
-        if(!videoWatchedEnough && video.playbackRate > 1) video.playbackRate = 1;
-      };
-      video.onended = () => {
-        if(videoWatchedEnough) return;
-        if(video.duration && currentLessonMaxTime / video.duration >= 0.95){
-          markVideoWatched(lessonId);
-        }else{
-          video.currentTime = currentLessonMaxTime;
-        }
-      };
+      video.onended = () => markVideoWatched(lessonId);
     }
 
     renderLessonQuestions(meta, userProgress);
@@ -1925,7 +1763,7 @@
     unlockOrLockQuiz();
     const uid = getCurrentUid();
     if(!uid) return;
-    await updateStudentLesson(uid, lessonId, {watched:true});
+    try{ await updateStudentLesson(uid, lessonId, {watched:true}); }catch(err){ console.error(err); }
   }
 
   function unlockOrLockQuiz(){
@@ -1968,36 +1806,30 @@
     const uid = getCurrentUid();
     const resultEl = document.getElementById('viewerResult');
     resultEl.style.display = 'block';
-    resultEl.textContent = 'نتيجتك: ' + score + ' من ' + total + ' — الدرجة: ' + toFive(score, total) + ' من 5' + (score === total ? ' — ممتاز! ✓' : ' — راجعي الفيديو وحاولي مرة أخرى.');
+    resultEl.textContent = 'نتيجتك: ' + score + ' من ' + total + (score === total ? ' — ممتاز! ✓' : ' — راجعي الفيديو وحاولي مرة أخرى.');
     if(uid){
-      await updateStudentLesson(uid, currentLessonId, {watched:true, score, total, completed: score === total});
-      renderProgressSection();
+      try{
+        const prev = (await getStudentProgress(uid))[currentLessonId] || {};
+        const passed = (score === total) || !!prev.completed; // إذا أكملت الدرس مرة لا يُلغى بإعادة المحاولة
+        await updateStudentLesson(uid, currentLessonId, {watched:true, score: Math.max(score, prev.score || 0), total, completed: passed});
+        renderProgressSection();
+      }catch(err){
+        console.error(err);
+        resultEl.textContent += ' — ⚠️ تعذّر حفظ نتيجتك. تأكدي من الاتصال بالإنترنت وأعيدي المحاولة، وإن تكرر أخبري معلمتك.';
+      }
     }
   }
 
-  // ===== درجات من 5 (المخاليط: المقطع + أسئلته + الاختبار) =====
-  const GRADED_LESSONS = ['l6']; // الدروس المعتمدة في الدرجة النهائية (تُضاف دروس أخرى هنا لاحقًا)
-  function toFive(score, total){
-    if(!total) return 0;
-    return Math.round((score / total) * 5 * 10) / 10;
-  }
-  function quizGradeFive(userProgress){
-    const q = userProgress && userProgress.quiz4;
-    return (q && q.total) ? toFive(q.score, q.total) : null;
-  }
-
   // ===== Progress section rendering =====
+  const GRADED_LESSONS = ['l6'];
   function computeStudentGrade(userProgress){
     userProgress = userProgress || {};
     const lessonIds = Object.keys(LESSONS_META);
-    const completedCount = lessonIds.filter(id => userProgress[id] && userProgress[id].completed).length;
-    // الدرجة من 5 محسوبة من الدروس المعتمدة للتقييم (حاليًا: المخاليط) حسب نتيجة أسئلة الدرس
-    let sum = 0;
-    GRADED_LESSONS.forEach(id => {
-      const p = userProgress[id];
-      if(p && p.total && p.score !== undefined) sum += toFive(p.score, p.total);
-    });
-    const grade = sum / GRADED_LESSONS.length;
+    const isDone = id => !!(userProgress[id] && userProgress[id].completed);
+    const completedCount = lessonIds.filter(isDone).length;
+    // الدروس المحتسبة في درجة النشاط الصفي (حاليًا: المخاليط فقط = 5 من 5). لا يُحذف أي تقدّم مخزّن.
+    const gradedDone = GRADED_LESSONS.filter(isDone).length;
+    const grade = (gradedDone / GRADED_LESSONS.length) * 5;
     return {grade: Math.round(grade * 10) / 10, completedCount, total: lessonIds.length};
   }
 
@@ -2086,10 +1918,7 @@
       const meta = LESSONS_META[id];
       const p = userProgress[id] || {};
       const status = p.completed ? 'أكملت الاختبار ✓' : (p.watched ? 'شاهدت الفيديو، بانتظار الاختبار' : 'لم تبدأ بعد');
-      let scoreLine = (p.score !== undefined) ? ('النتيجة: ' + p.score + ' / ' + p.total + ' (الدرجة: ' + toFive(p.score, p.total) + ' / 5)') : '';
-      if(id === 'l6' && userProgress.quiz4 && userProgress.quiz4.total){
-        scoreLine += (scoreLine ? ' — ' : '') + 'اختبار المخاليط: ' + userProgress.quiz4.score + ' / ' + userProgress.quiz4.total + ' (' + quizGradeFive(userProgress) + ' / 5)';
-      }
+      const scoreLine = (p.score !== undefined) ? ('النتيجة: ' + p.score + ' / ' + p.total) : '';
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML =
@@ -2108,20 +1937,39 @@
     renderAuthState();
     renderProgressSection();
     applyLessonLocks();
-    applyQuizLocks();
     applyActivityLinksToLessonCards();
   }
   initFirestoreDependentUI();
 
-  async function getAllStudentsSorted(){
+  async function getHiddenStudents(){
+    const st = await getSiteSettings();
+    return st.hiddenStudents || {};
+  }
+  async function setStudentHidden(uid, hidden){
+    const map = await getHiddenStudents();
+    if(hidden) map[uid] = true; else delete map[uid];
+    await updateSiteSettings({hiddenStudents: map});
+    renderAllStudentsReport();
+    if(typeof renderAnalyticsDashboard === 'function') renderAnalyticsDashboard();
+  }
+  async function hideStudentFromReport(uid){
+    if(!confirm('سيتم إخفاء هذه الطالبة من التقارير فقط. لن يُحذف أي من بياناتها أو أعمالها، ويمكنك إظهارها لاحقًا. متابعة؟')) return;
+    await setStudentHidden(uid, true);
+  }
+  async function getAllStudentsSorted(includeHidden){
     const profiles = await getAllProfiles(); // {uid: {name, username}, ...}
     const progress = await getAllProgress(); // {uid: {l1:{...}, ...}, ...}
-    const list = Object.keys(progress).map(uid => {
+    const hiddenMap = includeHidden ? {} : await getHiddenStudents();
+    // كل من سجّلت حسابًا (حتى لو لم يُحفظ لها تقدّم بعد) تظهر في التقرير، عدا حساب المعلمة
+    const uidSet = {};
+    Object.keys(progress).forEach(u => uidSet[u] = true);
+    Object.keys(profiles).forEach(u => { if(profiles[u] && profiles[u].username !== 'admin') uidSet[u] = true; });
+    const list = Object.keys(uidSet).filter(uid => !hiddenMap[uid]).map(uid => {
       const profile = profiles[uid];
-      const name = profile ? profile.name : (profile && profile.username) || uid;
+      const name = (profile && (profile.name || profile.username)) || uid;
       const username = profile ? profile.username : uid;
-      const analysis = computeStudentAnalysis(progress[uid]);
-      return {uid, name, username, grade: analysis.gradeInfo.grade, quizGrade: quizGradeFive(progress[uid]), level: analysis.level, completedCount: analysis.gradeInfo.completedCount, total: analysis.gradeInfo.total};
+      const analysis = computeStudentAnalysis(progress[uid] || {});
+      return {uid, name, username, grade: analysis.gradeInfo.grade, level: analysis.level, completedCount: analysis.gradeInfo.completedCount, total: analysis.gradeInfo.total};
     });
     list.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
     return list;
@@ -2131,7 +1979,13 @@
 
   async function computeClassAnalytics(){
     const progress = await getAllProgress();
-    const uids = Object.keys(progress);
+    const hiddenMap = await getHiddenStudents();
+    const profilesAll = await getAllProfiles();
+    const uidSet2 = {};
+    Object.keys(progress).forEach(u => uidSet2[u] = true);
+    Object.keys(profilesAll).forEach(u => { if(profilesAll[u] && profilesAll[u].username !== 'admin') uidSet2[u] = true; });
+    const uids = Object.keys(uidSet2).filter(u => !hiddenMap[u]);
+    uids.forEach(u => { if(!progress[u]) progress[u] = {}; });
 
     const levelCounts = {};
     LEVEL_ORDER.forEach(l => levelCounts[l] = 0);
@@ -2217,43 +2071,28 @@
     const printBtn = document.getElementById('printAllStudentsBtn');
     wrap.innerHTML = '<p class="auth-hint">جارٍ التحميل...</p>';
     const students = await getAllStudentsSorted();
-    if(!students.length){
-      wrap.innerHTML = '<p class="auth-hint">لا توجد أي طالبة مسجّلة بعد.</p>';
-      printBtn.style.display = 'none';
-      return;
-    }
     let rows = '';
+    if(!students.length) rows = '<p class="auth-hint">لا توجد طالبات ظاهرة في التقرير.</p>';
     students.forEach((s, i) => {
       rows += '<div class="admin-lesson-row">' +
-        '<span><label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="stu-del-check" value="' + s.uid + '"> ' + (i+1) + '. ' + s.name + '</label> <span style="color:var(--ink-soft); font-size:.78rem;">(' + s.level + ')</span></span>' +
+        '<span>' + (i+1) + '. ' + s.name + ' <span style="color:var(--ink-soft); font-size:.78rem;">(' + s.level + ')</span></span>' +
         '<span style="display:flex; align-items:center; gap:10px;">' +
         '<span style="font-weight:700; color:var(--turquoise-dark);">' + s.grade + ' / 5</span>' +
         '<button onclick="openPrintReportForUid(\'' + s.uid + '\')" style="color:var(--blue-deep);">عرض التقرير</button>' +
+        '<button onclick="hideStudentFromReport(\'' + s.uid + '\')" style="color:#888;">إخفاء من التقرير</button>' +
         '</span></div>';
     });
-    wrap.innerHTML = rows +
-      '<button class="btn-secondary" style="width:100%; margin-top:12px; color:#B42318; border-color:#B42318;" onclick="deleteSelectedStudents()">🗑️ حذف الطالبات المحددات (للأسماء التجريبية)</button>' +
-      '<p class="auth-hint" style="text-align:right;">ضعي علامة ✓ بجانب الأسماء التجريبية فقط ثم اضغطي الحذف. يُحذف سجل الطالبة المحددة (درجاتها وتقدّمها)، وتبقى بقية الطالبات كما هن.</p>';
-    printBtn.style.display = 'block';
-  }
-
-  async function deleteSelectedStudents(){
-    if(!isCurrentUserTeacher()){ alert('هذه الخاصية لحساب المعلمة فقط.'); return; }
-    const checks = Array.from(document.querySelectorAll('.stu-del-check:checked'));
-    if(!checks.length){ alert('حدّدي اسمًا واحدًا على الأقل أولًا.'); return; }
-    const names = checks.map(c => c.closest('label').textContent.trim());
-    if(!confirm('سيتم حذف سجلات ' + checks.length + ' طالبة نهائيًا (الدرجات والتقدّم):\n\n' + names.join('\n') + '\n\nهل أنتِ متأكدة؟')) return;
-    let ok = 0, failed = 0;
-    for(const c of checks){
-      try{
-        await waitForFirebase();
-        await window.fbDeleteDoc(window.fbDoc(window.fbDB, 'progress', c.value));
-        await window.fbDeleteDoc(window.fbDoc(window.fbDB, 'profiles', c.value));
-        ok++;
-      }catch(e){ console.error(e); failed++; }
+    const all = await getAllStudentsSorted(true);
+    const hiddenMap = await getHiddenStudents();
+    const hiddenList = all.filter(x => hiddenMap[x.uid]);
+    if(hiddenList.length){
+      rows += '<p class="auth-hint" style="margin-top:14px;">مخفيّة من التقرير (بياناتها محفوظة):</p>';
+      hiddenList.forEach(h => {
+        rows += '<div class="admin-lesson-row"><span>' + h.name + '</span><button onclick="setStudentHidden(\'' + h.uid + '\', false)" style="color:var(--turquoise-dark);">إظهار</button></div>';
+      });
     }
-    alert('تم حذف ' + ok + ' سجل' + (failed ? ('، وتعذّر حذف ' + failed + ' (قد تمنعه صلاحيات قاعدة البيانات)') : '') + '.');
-    renderAllStudentsReport();
+    wrap.innerHTML = rows;
+    printBtn.style.display = students.length ? 'block' : 'none';
   }
 
   async function openPrintAllStudents(){
@@ -2261,13 +2100,13 @@
     const today = new Date().toLocaleDateString('ar-SA');
     let rowsHtml = '';
     students.forEach((s, i) => {
-      rowsHtml += '<tr><td>' + (i+1) + '</td><td>' + s.name + '</td><td>' + s.completedCount + ' / ' + s.total + '</td><td>' + s.grade + ' / 5</td><td>' + (s.quizGrade === null ? '—' : s.quizGrade + ' / 5') + '</td><td>' + s.level + '</td></tr>';
+      rowsHtml += '<tr><td>' + (i+1) + '</td><td>' + s.name + '</td><td>' + s.completedCount + ' / ' + s.total + '</td><td>' + s.grade + ' / 5</td><td>' + s.level + '</td></tr>';
     });
     document.getElementById('printReportContent').innerHTML =
       '<h2>تقرير درجات الأنشطة الصفية — جميع الطالبات</h2>' +
       '<p><b>التاريخ:</b> ' + today + '</p>' +
       '<table style="width:100%; border-collapse:collapse; margin:16px 0;">' +
-      '<thead><tr><th style="border:1px solid #ccc; padding:6px;">م</th><th style="border:1px solid #ccc; padding:6px;">اسم الطالبة</th><th style="border:1px solid #ccc; padding:6px;">الدروس المكتملة</th><th style="border:1px solid #ccc; padding:6px;">الدرجة النهائية</th><th style="border:1px solid #ccc; padding:6px;">اختبار المخاليط</th><th style="border:1px solid #ccc; padding:6px;">التصنيف</th></tr></thead>' +
+      '<thead><tr><th style="border:1px solid #ccc; padding:6px;">م</th><th style="border:1px solid #ccc; padding:6px;">اسم الطالبة</th><th style="border:1px solid #ccc; padding:6px;">الدروس المكتملة</th><th style="border:1px solid #ccc; padding:6px;">الدرجة النهائية</th><th style="border:1px solid #ccc; padding:6px;">التصنيف</th></tr></thead>' +
       '<tbody>' + rowsHtml + '</tbody></table>';
 
     document.body.classList.add('printing-report');
@@ -2284,17 +2123,15 @@
       const meta = LESSONS_META[id];
       const p = progress[id] || {};
       const status = p.completed ? 'مكتمل ✓' : (p.watched ? 'شاهدت الفيديو فقط' : 'لم تبدأ');
-      const score = (p.score !== undefined) ? (p.score + ' / ' + p.total + ' (' + toFive(p.score, p.total) + ' / 5)') : '—';
+      const score = (p.score !== undefined) ? (p.score + ' / ' + p.total) : '—';
       rowsHtml += '<tr><td>' + meta.title + '</td><td>' + status + '</td><td>' + score + '</td></tr>';
     });
-    const qg = quizGradeFive(progress);
-    rowsHtml += '<tr><td>اختبار المخاليط</td><td>' + (qg === null ? 'لم يُجرَ' : 'تم') + '</td><td>' + (qg === null ? '—' : (progress.quiz4.score + ' / ' + progress.quiz4.total + ' (' + qg + ' / 5)')) + '</td></tr>';
 
     const today = new Date().toLocaleDateString('ar-SA');
     document.getElementById('printReportContent').innerHTML =
       '<h2>تقرير درجة الأنشطة الصفية — الكيمياء البسيطة</h2>' +
       '<p><b>اسم الطالبة:</b> ' + (profile ? profile.name : (displayName || '')) + '</p>' +
-      '<p><b>اسم الدخول:</b> ' + (profile ? profile.username : '') + '</p>' +
+      '<p><b>اسم المستخدم:</b> ' + (profile ? profile.username : '') + '</p>' +
       '<p><b>التاريخ:</b> ' + today + '</p>' +
       '<table style="width:100%; border-collapse:collapse; margin:16px 0;">' +
       '<thead><tr><th style="border:1px solid #ccc; padding:6px;">الدرس</th><th style="border:1px solid #ccc; padding:6px;">الحالة</th><th style="border:1px solid #ccc; padding:6px;">نتيجة الاختبار</th></tr></thead>' +
