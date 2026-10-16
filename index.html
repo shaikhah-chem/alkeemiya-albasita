@@ -1585,8 +1585,13 @@
 
   // ===== Persist URL-based videos across reloads/devices (unlike device-uploaded blob previews) =====
   async function applySavedVideoUrls(){
-    const settings = await getSiteSettings();
-    const saved = settings.lessonVideos || {};
+    // فيديو المخاليط الموجود في المستودع (mixtures.mp4) يُستخدم احتياطيًا إذا تعذّرت قراءة الإعدادات
+    if(LESSONS_META.l6 && !LESSONS_META.l6.videoSrc) LESSONS_META.l6.videoSrc = 'mixtures.mp4';
+    let saved = {};
+    try{
+      const settings = await getSiteSettings();
+      saved = settings.lessonVideos || {};
+    }catch(err){ console.error('تعذّر قراءة روابط الفيديو', err); }
     Object.keys(saved).forEach(id => {
       if(LESSONS_META[id]) LESSONS_META[id].videoSrc = saved[id];
     });
