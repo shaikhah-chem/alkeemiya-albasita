@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>طومسون أمام رذرفورد</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: two atom panels facing each other with a VS seam; controls under them; comparison table; classify activity. */
+:root{
+  --bg:#0c1413; --panel:#141f1e; --panel2:#1a2826; --line:#2b3d3a;
+  --fg:#e7f0eb; --muted:#97aba5;
+  --th:#ff8fa3; --ru:#e8c35a; --alpha:#ffa64d; --pos:#ff6f62; --neg:#62aaff; --amber:#f2c14e;
+  --ok:#6fe0a0; --bad:#ff8a7a;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:1320px;margin:0 auto;padding-block:18px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.credit{margin-bottom:-10px;font-size:13px;color:var(--muted);opacity:.7;text-align:left}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.eyebrow{font-size:13px;color:var(--amber)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3.4vw,40px);line-height:1.2;margin:2px 0 0;text-wrap:balance}
+h1 .t{color:var(--th)} h1 .r{color:var(--ru)} h1 .vs{color:var(--muted);font-size:.6em;padding-inline:6px}
+h2{font-family:var(--f-display);font-weight:500;font-size:21px;margin:0}
+button{font-family:inherit;font-size:15px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+button:hover{border-color:var(--amber)}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.primary{background:var(--amber);color:#1b1404;border-color:var(--amber);font-weight:700}
+.duel{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.duel{grid-template-columns:minmax(0,1fr)}}
+.side{background:radial-gradient(110% 90% at 50% 45%,#132220 0%,#0a1110 72%);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.side.th{border-top:3px solid var(--th)} .side.ru{border-top:3px solid var(--ru)}
+.shead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.shead h2{font-size:22px}
+.th .shead h2{color:var(--th)} .ru .shead h2{color:var(--ru)}
+.shead span{color:var(--muted);font-size:14px}
+.side canvas{width:100%;height:auto;aspect-ratio:500/420;display:block;max-width:100%}
+.tally{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tally div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 8px;display:flex;flex-direction:column}
+.tally .k{font-size:12px;color:var(--muted)}
+.tally .v{font-family:var(--f-display);font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.vsb{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:var(--bg);border:2px solid var(--line);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;color:var(--amber);font-size:18px;pointer-events:none}
+@media (max-width:760px){.vsb{display:none}}
+.ctls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.ctls .sp{flex:1 1 auto}
+.ctls button[aria-pressed="true"]{border-color:var(--alpha);color:var(--alpha)}
+.note{color:var(--muted);font-size:14px;margin:0}
+.block{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.bhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:620px}
+th,td{padding:10px 12px;text-align:right;vertical-align:top;border-bottom:1px solid var(--line)}
+thead th{font-family:var(--f-display);font-weight:500;font-size:18px}
+thead th.t{color:var(--th)} thead th.r{color:var(--ru)}
+tbody th{font-weight:700;color:var(--amber);width:22%}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--panel2)}
+td .cover{display:inline-block;color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:8px;padding:2px 10px}
+tr.shown td .cover{display:none}
+tr:not(.shown) td .txt{display:none}
+tr.same td{color:var(--fg)}
+.cls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.cls{grid-template-columns:minmax(0,1fr)}}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--panel2)}
+.item p{margin:0;font-size:16px}
+.item .b{display:flex;gap:8px}
+.item .b button{flex:1 1 0}
+.item .b .bt{border-color:rgba(255,143,163,.45)} .item .b .br{border-color:rgba(232,195,90,.45)}
+.item.ok{border-color:var(--ok)} .item.no{border-color:var(--bad)}
+.item .fb{font-size:13px;margin:0}
+.item.ok .fb{color:var(--ok)} .item.no .fb{color:var(--bad)}
+.score{font-family:var(--f-display);font-size:18px;color:var(--amber);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" dir="rtl">
+  <div class="credit">تنفيذ المعلمة: أ. شيخه المطيري</div>
+  <header>
+    <div>
+      <div class="eyebrow">كيمياء 1 · تعريف الذرة · مقارنة تفاعلية</div>
+      <h1><span class="t">نموذج طومسون</span><span class="vs">أمام</span><span class="r">نموذج رذرفورد</span></h1>
+    </div>
+    <button id="fs" type="button">ملء الشاشة</button>
+  </header>
+
+  <section class="duel">
+    <div class="side th">
+      <div class="shead"><h2>نموذج طومسون</h2><span>جوزيف طومسون · 1904م</span></div>
+      <canvas id="cT" aria-label="نموذج طومسون للذرة"></canvas>
+      <div class="tally"><div><span class="k">نفذت</span><span class="v" id="tA">0</span></div><div><span class="k">انحرفت</span><span class="v" id="tB">0</span></div><div><span class="k">ارتدّت</span><span class="v" id="tC">0</span></div></div>
+    </div>
+    <div class="side ru">
+      <div class="shead"><h2>نموذج رذرفورد</h2><span>إرنست رذرفورد · 1911م</span></div>
+      <canvas id="cR" aria-label="نموذج رذرفورد للذرة"></canvas>
+      <div class="tally"><div><span class="k">نفذت</span><span class="v" id="rA">0</span></div><div><span class="k">انحرفت</span><span class="v" id="rB">0</span></div><div><span class="k">ارتدّت</span><span class="v" id="rC">0</span></div></div>
+    </div>
+    <div class="vsb">أمام</div>
+  </section>
+
+  <div class="ctls">
+    <button type="button" id="stream" aria-pressed="false">إطلاق سيل من جسيمات ألفا</button>
+    <button type="button" id="center" class="primary">إطلاق جسيم نحو المركز</button>
+    <button type="button" id="labels" aria-pressed="true">إظهار التسميات</button>
+    <button type="button" id="clear">مسح المسارات</button>
+    <span class="sp"></span>
+    <p class="note">يُطلَق الجسيم نفسه على النموذجين معًا. الأحجام غير متناسبة: النواة الحقيقية أصغر بكثير.</p>
+  </div>
+
+  <section class="block">
+    <div class="bhead"><h2>جدول المقارنة</h2><div style="display:flex;gap:8px"><button type="button" id="showAll">إظهار الكل</button><button type="button" id="hideAll">إخفاء الكل</button></div></div>
+    <p class="note">اضغطي على أي صف لكشف إجابته بعد مناقشته مع الطالبات.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>وجه المقارنة</th><th class="t">نموذج طومسون</th><th class="r">نموذج رذرفورد</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
+
+  <section class="block">
+    <div class="bhead"><h2>لأي نموذج تنتمي العبارة؟</h2><div style="display:flex;gap:10px;align-items:center"><span class="score" id="score">0 / 8</span><button type="button" id="again">إعادة النشاط</button></div></div>
+    <div class="cls" id="cls"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+const W=500,H=420,AX=270,AY=210,R=150,V=220;
+const KN=0.5*V*V*2.5,KT=10;
+const ROWS=[
+ ['العالِم وسنة النموذج','جوزيف طومسون، 1904م','إرنست رذرفورد، 1911م'],
+ ['الدليل العلمي','اكتشاف الإلكترون بأنبوب أشعة المهبط','تجربة رقاقة الذهب (تشتّت جسيمات ألفا)'],
+ ['الشحنة الموجبة','منتشرة بانتظام في حجم الذرة كله','مركّزة في نواة صغيرة جدًا في مركز الذرة'],
+ ['الإلكترونات','مغروسة داخل الكرة الموجبة','تتحرك في الفراغ حول النواة'],
+ ['كتلة الذرة','موزّعة بانتظام في الذرة','تتركز معظمها في النواة'],
+ ['الفراغ داخل الذرة','لا فراغ تقريبًا (كرة مصمتة)','معظم حجم الذرة فراغ'],
+ ['سلوك جسيمات ألفا','تنفذ كلها بانحراف بسيط جدًا','معظمها ينفذ، وبعضها ينحرف، وقليل جدًا يرتدّ'],
+ ['التشبيه','كعكة الزبيب: الإلكترونات كالزبيب في عجينة موجبة','نواة صغيرة في المركز يحيط بها فراغ واسع'],
+ ['أوجه القصور','لم يفسّر ارتداد جسيمات ألفا في تجربة رقاقة الذهب','لم يفسّر لماذا لا تنجذب الإلكترونات السالبة نحو النواة الموجبة'],
+];
+const SAME='في النموذجين: الذرة متعادلة كهربائيًا، وتحتوي على إلكترونات سالبة الشحنة.';
+const ITEMS=[
+ ['الشحنة الموجبة منتشرة في حجم الذرة كله','t'],['للذرة نواة صغيرة موجبة الشحنة','r'],
+ ['معظم حجم الذرة فراغ','r'],['الإلكترونات مغروسة في كرة موجبة','t'],
+ ['فسّر ارتداد بعض جسيمات ألفا للخلف','r'],['يُشبَّه بكعكة الزبيب','t'],
+ ['تتركز معظم كتلة الذرة في مركزها','r'],['اعتمد على اكتشاف الإلكترون في أنبوب أشعة المهبط','t']
+];
+const $=id=>document.getElementById(id);
+const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+
+function makeSide(cv,kind){
+  const ctx=cv.getContext('2d');
+  const s={cv,ctx,kind,parts:[],trails:[],n:{a:0,b:0,c:0},
+    els:Array.from({length:kind==='t'?12:8},(_,i)=>{
+      if(kind==='t'){const a=i*2.399,r=R*Math.sqrt((i+.5)/12)*.85;return {x:AX+r*Math.cos(a),y:AY+r*Math.sin(a),ph:i};}
+      return {r:40+((i*53)%100),a:i*0.79,w:(0.5+((i*17)%10)/14)*(i%2?1:-1),e:0.6+((i*29)%10)/25};
+    })};
+  return s;
+}
+const SIDES=[makeSide($('cT'),'t'),makeSide($('cR'),'r')];
+let showLabels=true,streaming=false,acc=0,t=0;
+
+function fire(y,tracked){SIDES.forEach(s=>s.parts.push({x:4,y,vx:V,vy:0,tr:[[4,y]],keep:tracked}));}
+function force(s,p){
+  const dx=p.x-AX,dy=p.y-AY,r2=dx*dx+dy*dy,r=Math.sqrt(r2)+1e-4;
+  if(s.kind==='r'){const f=KN/(r2+.25);return [f*dx/r,f*dy/r,r];}
+  if(r<R){const f=KT*(r/R);return [f*dx/r,f*dy/r,R];}
+  return [0,0,R];
+}
+function stepSide(s,dt){
+  s.parts=s.parts.filter(p=>{
+    let tt=0;
+    while(tt<dt){const [ax,ay,r]=force(s,p);const sp=Math.hypot(p.vx,p.vy)||1;const h=Math.min(dt-tt,Math.max(5e-5,.15*r/sp),1/240);
+      p.vx+=ax*h;p.vy+=ay*h;p.x+=p.vx*h;p.y+=p.vy*h;tt+=h;}
+    p.tr.push([p.x,p.y]);
+    if(p.x<-10||p.x>W+10||p.y<-10||p.y>H+10){
+      const th=Math.abs(Math.atan2(-p.vy,p.vx))*180/Math.PI;
+      if(th<10)s.n.a++;else if(th<90)s.n.b++;else s.n.c++;
+      if(p.keep||th>=10){s.trails.push({pts:p.tr,th});if(s.trails.length>10)s.trails.shift();}
+      return false;}
+    return true;});
+}
+function label(ctx,txt,x,y,col,size,align){ctx.save();ctx.direction='rtl';ctx.font=`600 ${size||14}px "IBM Plex Sans Arabic",Tahoma,sans-serif`;ctx.textAlign=align||'center';ctx.fillStyle=col;ctx.fillText(txt,x,y);ctx.restore();}
+function pointer(ctx,x1,y1,x2,y2,col){ctx.save();ctx.strokeStyle=col;ctx.globalAlpha=.6;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.beginPath();ctx.arc(x2,y2,2,0,7);ctx.fillStyle=col;ctx.fill();ctx.restore();}
+function glow(ctx,x,y,r,rgb,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${rgb},${a})`);g.addColorStop(1,`rgba(${rgb},0)`);ctx.fillStyle=g;ctx.fillRect(x-r,y-r,2*r,2*r);}
+
+function drawSide(s){
+  const c=s.ctx;c.clearRect(0,0,W,H);
+  if(s.kind==='t'){
+    const g=c.createRadialGradient(AX-40,AY-40,10,AX,AY,R);g.addColorStop(0,'rgba(255,143,163,.55)');g.addColorStop(1,'rgba(255,111,98,.22)');
+    c.fillStyle=g;c.beginPath();c.arc(AX,AY,R,0,7);c.fill();
+    c.strokeStyle='rgba(255,143,163,.6)';c.lineWidth=1.5;c.stroke();
+    c.save();c.globalAlpha=.55;c.fillStyle='#fff';c.font='700 16px Tahoma';c.textAlign='center';c.textBaseline='middle';
+    for(let i=0;i<14;i++){const a=i*2.1+1,r=R*Math.sqrt((i+.3)/14)*.9;c.fillText('+',AX+r*Math.cos(a),AY+r*Math.sin(a));}c.restore();
+    s.els.forEach(e=>{const x=e.x+Math.sin(t*3+e.ph)*1.2,y=e.y+Math.cos(t*2.6+e.ph)*1.2;
+      c.fillStyle='#62aaff';c.beginPath();c.arc(x,y,7,0,7);c.fill();c.fillStyle='#08121f';c.fillRect(x-3.5,y-1,7,2);});
+    if(showLabels){
+      pointer(c,AX+R-30,AY-R-6,AX+R*0.55,AY-R*0.55,'#ff8fa3');label(c,'كرة موجبة الشحنة منتشرة',AX+R-40,AY-R-12,'#ff8fa3',14);
+      const e=s.els[7];pointer(c,AX-R+30,AY+R+16,e.x,e.y,'#62aaff');label(c,'إلكترونات سالبة مغروسة فيها',AX-R+60,AY+R+30,'#62aaff',14);
+    }
+  }else{
+    c.save();c.setLineDash([4,7]);c.strokeStyle='rgba(232,195,90,.35)';c.lineWidth=1.2;c.beginPath();c.arc(AX,AY,R,0,7);c.stroke();c.restore();
+    s.els.forEach(e=>{const a=e.a+t*e.w;const x=AX+e.r*Math.cos(a),y=AY+e.r*e.e*Math.sin(a);
+      c.fillStyle='#62aaff';c.beginPath();c.arc(x,y,6,0,7);c.fill();c.fillStyle='#08121f';c.fillRect(x-3,y-1,6,2);});
+    glow(c,AX,AY,22,'255,111,98',.55);c.fillStyle='#ff6f62';c.beginPath();c.arc(AX,AY,5,0,7);c.fill();
+    if(showLabels){
+      pointer(c,AX+70,AY-R-6,AX+4,AY-4,'#ff6f62');label(c,'نواة صغيرة موجبة تحوي معظم الكتلة',AX+40,AY-R-12,'#ff6f62',14);
+      const e=s.els[2],a=e.a+t*e.w;pointer(c,AX-R+30,AY+R+16,AX+e.r*Math.cos(a),AY+e.r*e.e*Math.sin(a),'#62aaff');label(c,'إلكترونات تتحرك حول النواة',AX-R+50,AY+R+30,'#62aaff',14);
+      label(c,'فراغ',AX+R*.62,AY+R*.15,'rgba(232,195,90,.8)',15);
+    }
+  }
+  c.save();c.lineJoin='round';
+  s.trails.forEach((tr,i)=>{c.strokeStyle=`rgba(255,197,138,${.3+.6*(i+1)/s.trails.length})`;c.lineWidth=2;c.beginPath();tr.pts.forEach((q,j)=>j?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.stroke();});
+  c.globalCompositeOperation='lighter';
+  s.parts.forEach(p=>{c.strokeStyle='rgba(255,166,77,.5)';c.lineWidth=2;c.beginPath();const tr=p.tr.slice(-14);tr.forEach((q,j)=>j?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.stroke();
+    glow(c,p.x,p.y,9,'255,166,77',.6);c.fillStyle='#ffd2a6';c.beginPath();c.arc(p.x,p.y,3,0,7);c.fill();});
+  c.restore();
+  if(showLabels)label(c,'جسيمات ألفا (+) ◀',8,22,'#ffa64d',13,'left');
+}
+
+function resize(){SIDES.forEach(s=>{const d=window.devicePixelRatio||1,w=s.cv.clientWidth||500;s.cv.width=Math.round(w*d);s.cv.height=Math.round(w*H/W*d);s.ctx.setTransform(w/W*d,0,0,w/W*d,0,0);});}
+window.addEventListener('resize',resize);
+
+let last=performance.now(),lastKey='';
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;
+  if(streaming){acc+=dt*9;while(acc>=1){fire(AY+(Math.random()*2-1)*175,false);acc-=1;}}
+  SIDES.forEach(s=>{stepSide(s,dt);drawSide(s);});
+  const key=SIDES.map(s=>s.n.a+','+s.n.b+','+s.n.c).join('|');
+  if(key!==lastKey){lastKey=key;const [T,Rr]=SIDES;$('tA').textContent=T.n.a;$('tB').textContent=T.n.b;$('tC').textContent=T.n.c;$('rA').textContent=Rr.n.a;$('rB').textContent=Rr.n.b;$('rC').textContent=Rr.n.c;}
+  requestAnimationFrame(frame);
+}
+
+$('stream').onclick=e=>{streaming=!streaming;e.currentTarget.setAttribute('aria-pressed',streaming);e.currentTarget.textContent=streaming?'إيقاف سيل الجسيمات':'إطلاق سيل من جسيمات ألفا';};
+$('center').onclick=()=>fire(AY+(Math.random()-.5)*0.5,true);
+$('labels').onclick=e=>{showLabels=!showLabels;e.currentTarget.setAttribute('aria-pressed',showLabels);};
+$('clear').onclick=()=>SIDES.forEach(s=>{s.trails=[];s.n={a:0,b:0,c:0};});
+SIDES.forEach(s=>s.cv.addEventListener('click',e=>{const r=s.cv.getBoundingClientRect();fire((e.clientY-r.top)/r.height*H,true);}));
+$('fs').onclick=()=>{try{const d=document;if(d.fullscreenElement)d.exitFullscreen();else d.documentElement.requestFullscreen().catch(()=>{});}catch(e){}};
+
+/* table */
+const tb=$('rows');
+tb.innerHTML=ROWS.map(r=>`<tr><th scope="row">${r[0]}</th><td><span class="cover">؟ اضغطي للكشف</span><span class="txt">${r[1]}</span></td><td><span class="cover">؟ اضغطي للكشف</span><span class="txt">${r[2]}</span></td></tr>`).join('')+
+ `<tr class="same"><th scope="row">أوجه الشبه</th><td colspan="2"><span class="cover">؟ اضغطي للكشف</span><span class="txt">${SAME}</span></td></tr>`;
+tb.querySelectorAll('tr').forEach(tr=>tr.onclick=()=>tr.classList.toggle('shown'));
+$('showAll').onclick=()=>tb.querySelectorAll('tr').forEach(tr=>tr.classList.add('shown'));
+$('hideAll').onclick=()=>tb.querySelectorAll('tr').forEach(tr=>tr.classList.remove('shown'));
+
+/* classify */
+function buildCls(){
+  const box=$('cls'),order=ITEMS.map((x,i)=>i).sort(()=>Math.random()-.5);let score=0,answered=0;
+  $('score').textContent='0 / '+ITEMS.length;
+  box.innerHTML=order.map(i=>`<div class="item" data-i="${i}"><p>${ITEMS[i][0]}</p><div class="b"><button type="button" class="bt" data-a="t">طومسون</button><button type="button" class="br" data-a="r">رذرفورد</button></div><p class="fb"></p></div>`).join('');
+  box.querySelectorAll('.item').forEach(it=>{
+    it.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      if(it.dataset.done)return;it.dataset.done=1;answered++;
+      const ok=b.dataset.a===ITEMS[+it.dataset.i][1];if(ok)score++;
+      it.classList.add(ok?'ok':'no');
+      it.querySelector('.fb').textContent=ok?'إجابة صحيحة':'الإجابة الصحيحة: نموذج '+(ITEMS[+it.dataset.i][1]==='t'?'طومسون':'رذرفورد');
+      $('score').textContent=score+' / '+ITEMS.length;
+    });
+  });
+}
+$('again').onclick=buildCls;
+
+resize();buildCls();
+fire(AY-60,true);setTimeout(()=>fire(AY+0.1,true),700);
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>تجربة رذرفورد</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: dark lab bench. Apparatus/atom stage beside a control–predict–observe column; conclusions strip below. */
+:root{
+  --bg:#0c1413; --panel:#141f1e; --panel2:#1a2826; --line:#2b3d3a;
+  --fg:#e7f0eb; --muted:#97aba5;
+  --alpha:#ffa64d; --gold:#e8c35a; --zns:#7dffb2; --amber:#f2c14e; --pos:#ff6f62; --neg:#62aaff;
+  --ok:#6fe0a0; --bad:#ff8a7a;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:1320px;margin:0 auto;padding-block:18px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.eyebrow{font-size:13px;color:var(--amber);letter-spacing:.02em}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3.4vw,40px);line-height:1.2;margin:2px 0 0;text-wrap:balance}
+h1 span{color:var(--gold)}
+button{font-family:inherit;font-size:15px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--amber)}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{display:flex;align-items:center;gap:8px;padding:9px 14px}
+.tab .n{font-family:var(--f-display);font-size:13px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--bg);color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--amber);color:#1b1404;border-color:var(--amber);font-weight:700}
+.tab[aria-selected="true"] .n{background:#1b1404;color:var(--amber)}
+.tab.done .n{background:var(--ok);color:#06210f}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:minmax(0,1fr)}}
+.stage{background:radial-gradient(120% 90% at 50% 45%,#132220 0%,#0a1110 70%);border:1px solid var(--line);border-radius:16px;padding:12px;min-width:0}
+.stage canvas#sim{width:100%;height:auto;display:block;aspect-ratio:1000/520;max-width:100%}
+.stagefoot{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.hint{color:var(--muted);font-size:15px;flex:1 1 260px;min-width:0;margin:0}
+.counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%}
+@media (max-width:560px){.counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cnt{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cnt .k{font-size:13px;color:var(--muted)}
+.cnt .v{font-family:var(--f-display);font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
+.cnt .p{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
+.cnt.c1 .v{color:var(--zns)} .cnt.c2 .v{color:var(--amber)} .cnt.c3 .v{color:var(--pos)}
+aside{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card h2{font-family:var(--f-display);font-weight:500;font-size:18px;margin:0;color:var(--amber)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.val{font-variant-numeric:tabular-nums;color:var(--alpha);font-weight:700;direction:ltr}
+input[type=range]{width:100%;accent-color:var(--amber)}
+.switch{position:relative;width:54px;height:30px;border-radius:999px;background:var(--line);border:none;padding:0;flex:none}
+.switch::after{content:"";position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;background:var(--fg);transition:right .2s}
+.switch[aria-pressed="true"]{background:var(--amber)}
+.switch[aria-pressed="true"]::after{right:27px;background:#1b1404}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;font-size:14px}
+.seg button[aria-pressed="true"]{border-color:var(--alpha);color:var(--alpha);font-weight:700}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns button{flex:1 1 auto}
+.q{font-size:16px;font-weight:500;margin:0}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{text-align:right}
+.opt.right{border-color:var(--ok);color:var(--ok)}
+.opt.wrong{border-color:var(--bad);color:var(--bad)}
+.fb{font-size:14px;color:var(--muted);min-height:1.4em;margin:0}
+.obs p{margin:0}
+.locked{color:var(--muted);font-size:15px}
+.conc{background:var(--panel2);border-radius:10px;padding:10px 12px;border-right:3px solid var(--gold)}
+.conc b{color:var(--gold)}
+.small{font-size:13px;color:var(--muted);margin:0}
+.summary{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.summary h2{font-family:var(--f-display);font-weight:500;font-size:20px;margin:0}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:980px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.facts{grid-template-columns:minmax(0,1fr)}}
+.fact{border:1px dashed var(--line);border-radius:12px;padding:10px;color:var(--muted);font-size:15px;display:flex;flex-direction:column;gap:4px}
+.fact .k{font-size:12px}
+.fact .o{font-size:14px}
+.fact.done{border-style:solid;border-color:var(--gold);color:var(--fg)}
+.fact.done .k{color:var(--gold)}
+.final{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.finaltext{flex:1 1 300px;font-size:17px;margin:0}
+.finaltext b{color:var(--gold)}
+.credit{margin-bottom:-10px;font-size:13px;color:var(--muted);opacity:.7;text-align:left}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" dir="rtl">
+  <div class="credit">تنفيذ المعلمة: أ. شيخه المطيري</div>
+  <header>
+    <div>
+      <div class="eyebrow">كيمياء 1 · تعريف الذرة · محاكاة تفاعلية</div>
+      <h1>تجربة <span>رقاقة الذهب</span> لرذرفورد</h1>
+    </div>
+    <button id="fs" type="button">ملء الشاشة</button>
+  </header>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <div class="main">
+    <section class="stage">
+      <canvas id="sim" tabindex="0" aria-label="رسم تجربة رذرفورد"></canvas>
+      <div class="stagefoot">
+        <p class="hint" id="hint"></p>
+        <div class="counts" id="counts">
+          <div class="cnt"><span class="k">جسيمات أُطلقت</span><span class="v" id="cT">0</span><span class="p">&nbsp;</span></div>
+          <div class="cnt c1"><span class="k">نفذت دون انحراف تقريبًا</span><span class="v" id="c1">0</span><span class="p" id="p1">0%</span></div>
+          <div class="cnt c2"><span class="k">انحرفت بزاوية كبيرة</span><span class="v" id="c2">0</span><span class="p" id="p2">0%</span></div>
+          <div class="cnt c3"><span class="k">ارتدّت للخلف</span><span class="v" id="c3">0</span><span class="p" id="p3">0%</span></div>
+        </div>
+      </div>
+    </section>
+
+    <aside>
+      <div class="card">
+        <h2>أدوات التحكم</h2>
+        <div id="ctl"></div>
+      </div>
+      <div class="card">
+        <h2>توقّعي قبل التجربة</h2>
+        <p class="q" id="q"></p>
+        <div class="opts" id="opts"></div>
+        <p class="fb" id="fb"></p>
+      </div>
+      <div class="card obs">
+        <h2>المشاهدة والاستنتاج</h2>
+        <div id="obs"></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="summary">
+    <h2>ماذا استنتج رذرفورد عن تركيب الذرة؟</h2>
+    <div class="facts" id="facts"></div>
+    <div class="final">
+      <p class="finaltext" id="finaltext">أكملي التجارب لتظهر النتيجة النهائية.</p>
+      <button id="showFinal" type="button">عرض النتيجة الآن</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+const W=1000,H=520,FX=560,FY=260,RR=200,SRC=262,DEG=Math.PI/180;
+const TABS=[
+ {id:'thomson',name:'توقّع طومسون',
+  hint:'هنا نرى ما كان متوقعًا لو صحّ نموذج طومسون. افتحي المصدر وراقبي أماكن الومضات على الشاشة.',
+  q:'لو كانت الذرة كرة موجبة منتشرة تتوزع فيها الإلكترونات (نموذج طومسون)، ماذا يحدث لجسيمات ألفا الموجبة عند وصولها إلى رقاقة الذهب؟',
+  opts:['تنفذ جميعها تقريبًا بانحراف بسيط جدًا','ترتدّ جميعها للخلف','تنحرف جميعها بزوايا كبيرة'],ans:0,
+  obs:'وفق نموذج طومسون تنفذ جسيمات ألفا جميعها من رقاقة الذهب بانحراف بسيط جدًا، لأن الشحنة الموجبة منتشرة في حجم الذرة كله فلا تكفي لصدّ جسيمات ألفا السريعة.',
+  conc:'كان رذرفورد <b>يتوقّع</b> أن تنفذ الجسيمات كلها تقريبًا في خطوط مستقيمة.'},
+ {id:'real',name:'نتائج رذرفورد',
+  hint:'هذه هي النتائج الحقيقية. اتركي المصدر يعمل وزيدي معدل الإطلاق، وراقبي العدادات. (النِّسب مكبَّرة للتوضيح: في التجربة الحقيقية ارتدّ نحو جسيم واحد من كل 8000 جسيم تقريبًا.)',
+  q:'أيّ مشاهدة فاجأت رذرفورد وأثبتت خطأ نموذج طومسون؟',
+  opts:['نفاذ معظم الجسيمات من الرقاقة','ارتداد بعض الجسيمات إلى الخلف','توهّج شاشة كبريتيد الخارصين'],ans:1,
+  obs:'نفذت معظم جسيمات ألفا دون انحراف، وانحرف عدد قليل منها بزوايا كبيرة، وارتدّ عدد ضئيل جدًا إلى الخلف. شبّه رذرفورد ذلك بإطلاق قذيفة على ورقة مناديل فترتدّ القذيفة نحوك.',
+  conc:'لا بد أن في الذرة <b>مركزًا صغيرًا جدًا موجب الشحنة وكبير الكتلة</b> يصدّ جسيمات ألفا.'},
+ {id:'zoom',name:'داخل رقاقة الذهب',
+  hint:'منظر مكبَّر لذرات الذهب (الأحجام غير متناسبة). اضغطي على أي مكان في الرسم لإطلاق جسيم ألفا من ذلك الارتفاع وتتبّعي مساره.',
+  q:'لماذا تنفذ معظم جسيمات ألفا دون أن تنحرف؟',
+  opts:['لأن معظم حجم الذرة فراغ','لأن جسيمات ألفا سالبة الشحنة','لأن رقاقة الذهب سميكة جدًا'],ans:0,
+  obs:'الجسيمات البعيدة عن النوى تمرّ في الفراغ دون أن تتأثر، والقريبة من النواة تتنافر معها فتنحرف، أما التي تتجه نحو النواة مباشرة فترتدّ للخلف.',
+  conc:'الذرة <b>نواة صغيرة موجبة</b> في مركزها، تتركز فيها معظم الكتلة، وتتحرك الإلكترونات السالبة في <b>الفراغ</b> المحيط بها.'}
+];
+const FACTS=[
+ {k:'معظم الجسيمات نفذت دون انحراف',c:'معظم حجم الذرة فراغ'},
+ {k:'بعض الجسيمات انحرفت بزوايا كبيرة',c:'في الذرة شحنة موجبة مركّزة تتنافر مع ألفا'},
+ {k:'عدد ضئيل جدًا ارتدّ للخلف',c:'النواة صغيرة جدًا وكثيفة وتحوي معظم كتلة الذرة'},
+ {k:'تتبّع المسارات داخل الرقاقة',c:'الإلكترونات السالبة تتحرك حول النواة في الفراغ'}
+];
+
+const S={tab:0,on:true,rate:30,zmodel:'nuclear',pred:{},done:new Set(),facts:new Set(),showFinal:false,
+ counts:{t:0,a:0,b:0,c:0}};
+const $=id=>document.getElementById(id);
+const cv=$('sim'),ctx=cv.getContext('2d');
+const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+
+/* ---------- apparatus physics ---------- */
+function sampleTheta(){
+  if(TABS[S.tab].id==='thomson') return Math.min(3,Math.abs(gauss()*0.9))*DEG;
+  const r=Math.random(),k=1;
+  if(r<0.92) return Math.min(6,Math.abs(gauss()*1.4))*DEG;
+  if(r<0.99){const b=Math.sqrt(1+Math.random()*(64-1))*k;return 2*Math.atan(k/b);}       // 14°–90°
+  const b=Math.sqrt(0.02+Math.random()*0.98)*k;return Math.min(165*DEG,2*Math.atan(k/b)); // >90°
+}
+let parts=[],flashes=[],marks=[],acc=0;
+function spawnA(){parts.push({ph:0,x:SRC,y:FY+(Math.random()-.5)*4,th:sampleTheta()*(Math.random()<.5?1:-1),d:0});}
+function stepApparatus(dt){
+  acc+=dt*S.rate*(S.on?1:0);
+  while(acc>=1){spawnA();acc-=1;}
+  const v=520;
+  parts=parts.filter(p=>{
+    if(p.ph===0){p.x+=v*dt;if(p.x>=FX){p.ph=1;p.d=p.x-FX;p.y0=p.y;}else return true;}
+    p.d+=v*dt;
+    const r=Math.min(p.d,RR);p.x=FX+r*Math.cos(p.th);p.y=p.y0-r*Math.sin(p.th);
+    if(p.d>=RR){
+      const a=Math.abs(p.th)/DEG,hx=FX+RR*Math.cos(p.th),hy=FY-RR*Math.sin(p.th);
+      flashes.push({x:hx,y:hy,life:.6});
+      const rm=RR+9+Math.random()*16;marks.push({x:FX+rm*Math.cos(p.th),y:FY-rm*Math.sin(p.th)});
+      if(marks.length>2500)marks.shift();
+      const c=S.counts;c.t++;if(a<10)c.a++;else if(a<90)c.b++;else c.c++;
+      return false;}
+    return true;});
+  flashes.forEach(f=>f.life-=dt);flashes=flashes.filter(f=>f.life>0);
+}
+
+/* ---------- zoom physics ---------- */
+const ATOMS=[];
+(function(){for(let c=0;c<3;c++)for(let r=0;r<5;r++){ATOMS.push({x:410+c*110+(r%2)*40,y:70+r*95+(c%2?10:-10)});}})();
+const RA=36,KN=0.5*270*270*0.8,KT=900;
+let zparts=[],trails=[],zacc=0;
+function zSpawn(y,tracked){const p={x:10,y:y,vx:270,vy:0,tr:tracked?[[10,y]]:null};zparts.push(p);if(tracked){trails.push(p);if(trails.length>6)trails.shift();}}
+function zForce(p){
+  let ax=0,ay=0;
+  for(const a of ATOMS){const dx=p.x-a.x,dy=p.y-a.y,r2=dx*dx+dy*dy;
+    if(S.zmodel==='nuclear'){if(r2>140*140)continue;const r=Math.sqrt(r2)+0.001,f=KN/(r2+0.25);ax+=f*dx/r;ay+=f*dy/r;}
+    else{const r=Math.sqrt(r2);if(r<RA&&r>0.01){const f=KT*(r/RA);ax+=f*dx/r;ay+=f*dy/r;}}}
+  return [ax,ay];
+}
+function stepZoom(dt){
+  zacc+=dt*7*(S.on?1:0);while(zacc>=1){zSpawn(30+Math.random()*(H-60),false);zacc-=1;}
+  zparts=zparts.filter(p=>{
+    let t=0;
+    while(t<dt){
+      let rmin=1e9;for(const a of ATOMS){const d=Math.hypot(p.x-a.x,p.y-a.y);if(d<rmin)rmin=d;}
+      const sp=Math.hypot(p.vx,p.vy)||1,h=Math.min(dt-t,Math.max(0.00005,0.15*rmin/sp),1/240);
+      const [ax,ay]=zForce(p);p.vx+=ax*h;p.vy+=ay*h;p.x+=p.vx*h;p.y+=p.vy*h;t+=h;
+    }
+    if(p.tr){p.tr.push([p.x,p.y]);if(p.tr.length>900)p.tr.shift();}
+    if(p.x<-20||p.x>W+20||p.y<-20||p.y>H+20){if(p.tr)p.dead=true;return false;}
+    return true;});
+}
+
+/* ---------- drawing ---------- */
+function resize(){const dpr=window.devicePixelRatio||1,w=cv.clientWidth||1000;cv.width=Math.round(w*dpr);cv.height=Math.round(w*H/W*dpr);ctx.setTransform(w/W*dpr,0,0,w/W*dpr,0,0);}
+window.addEventListener('resize',resize);
+function label(t,x,y,col,size,align){ctx.save();ctx.direction='rtl';ctx.font=`600 ${size||15}px "IBM Plex Sans Arabic",Tahoma,sans-serif`;ctx.textAlign=align||'center';ctx.fillStyle=col||'#97aba5';ctx.fillText(t,x,y);ctx.restore();}
+function glow(x,y,r,rgb,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${rgb},${a})`);g.addColorStop(1,`rgba(${rgb},0)`);ctx.fillStyle=g;ctx.fillRect(x-r,y-r,2*r,2*r);}
+
+function drawApparatus(){
+  ctx.clearRect(0,0,W,H);
+  // ring screen
+  const gap=12*DEG;
+  ctx.save();ctx.lineWidth=12;ctx.strokeStyle='rgba(125,255,178,.10)';ctx.beginPath();ctx.arc(FX,FY,RR+6,Math.PI+gap,Math.PI-gap);ctx.stroke();
+  ctx.lineWidth=2;ctx.strokeStyle='rgba(200,235,240,.35)';ctx.beginPath();ctx.arc(FX,FY,RR,Math.PI+gap,Math.PI-gap);ctx.stroke();
+  ctx.beginPath();ctx.arc(FX,FY,RR+12,Math.PI+gap,Math.PI-gap);ctx.stroke();ctx.restore();
+  // angle ticks
+  [0,30,60,90,120,150].forEach(a=>{[1,-1].forEach(s=>{if(a===0&&s<0)return;const t=a*DEG*s,x=FX+(RR-14)*Math.cos(t),y=FY-(RR-14)*Math.sin(t);
+    ctx.save();ctx.font='12px "IBM Plex Sans Arabic",Tahoma';ctx.fillStyle='rgba(151,171,165,.75)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(a+'°',x,y);ctx.restore();});});
+  label('شاشة مطلية بكبريتيد الخارصين (ZnS)',FX,FY-RR-30,'#7dffb2',15);
+  // marks
+  ctx.save();ctx.fillStyle='rgba(125,255,178,.55)';marks.forEach(m=>ctx.fillRect(m.x-1,m.y-1,2,2));ctx.restore();
+  // source box
+  ctx.save();ctx.fillStyle='#3a4447';ctx.strokeStyle='#5d6a6d';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(140,FY-48,122,96,8);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ffa64d';ctx.beginPath();ctx.arc(205,FY,11,0,7);ctx.fill();ctx.fillStyle='#3a4447';ctx.fillRect(216,FY-3,46,6);ctx.restore();
+  glow(205,FY,26,'255,166,77',.35);
+  label('صندوق رصاص',201,FY-58,'#e7f0eb',14);
+  label('مصدر جسيمات ألفا',201,FY+70,'#ffa64d',14);
+  label('(بولونيوم)',201,FY+90,'#97aba5',13);
+  // collimator
+  ctx.fillStyle='#5d6a6d';ctx.fillRect(312,FY-40,8,36);ctx.fillRect(312,FY+4,8,36);
+  // beam
+  if(S.on){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='rgba(255,166,77,.18)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(SRC,FY);ctx.lineTo(FX,FY);ctx.stroke();ctx.restore();}
+  label('حزمة ألفا (+)',440,FY-16,'#ffa64d',14);
+  // foil
+  ctx.fillStyle='#e8c35a';ctx.fillRect(FX-2,FY-62,4,124);glow(FX,FY,30,'232,195,90',.18);
+  label('رقاقة ذهب رقيقة',FX+6,FY+86,'#e8c35a',14,'right');
+  // particles
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  parts.forEach(p=>{ctx.fillStyle='#ffc58a';ctx.beginPath();ctx.arc(p.x,p.y,2.4,0,7);ctx.fill();});
+  flashes.forEach(f=>{glow(f.x,f.y,18,'150,255,195',f.life/0.6);ctx.fillStyle=`rgba(230,255,240,${f.life/0.6})`;ctx.beginPath();ctx.arc(f.x,f.y,2.5,0,7);ctx.fill();});
+  ctx.restore();
+  label(TABS[S.tab].id==='thomson'?'النتائج المتوقَّعة وفق نموذج طومسون':'النتائج الحقيقية التي شاهدها رذرفورد',W-20,30,TABS[S.tab].id==='thomson'?'#62aaff':'#e8c35a',16,'right');
+}
+
+let tz=0;
+function drawZoom(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(232,195,90,.04)';ctx.fillRect(330,0,380,H);
+  label('ذرات ذهب داخل الرقاقة (منظر مكبَّر، الأحجام غير متناسبة)',W-20,30,'#e8c35a',15,'right');
+  for(const a of ATOMS){
+    if(S.zmodel==='nuclear'){
+      ctx.save();ctx.setLineDash([3,5]);ctx.strokeStyle='rgba(98,170,255,.22)';ctx.beginPath();ctx.arc(a.x,a.y,RA,0,7);ctx.stroke();ctx.restore();
+      for(let k=0;k<3;k++){const t=tz*(1.3+k*.4)+k*2.1+a.x*.01,rr=RA*(.55+k*.2);ctx.fillStyle='#62aaff';ctx.beginPath();ctx.arc(a.x+rr*Math.cos(t),a.y+rr*Math.sin(t),1.8,0,7);ctx.fill();}
+      glow(a.x,a.y,12,'255,111,98',.5);ctx.fillStyle='#ff6f62';ctx.beginPath();ctx.arc(a.x,a.y,3.2,0,7);ctx.fill();
+    }else{
+      const g=ctx.createRadialGradient(a.x,a.y,0,a.x,a.y,RA);g.addColorStop(0,'rgba(255,111,98,.30)');g.addColorStop(1,'rgba(255,111,98,.10)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(a.x,a.y,RA,0,7);ctx.fill();
+      for(let k=0;k<6;k++){const t=k*1.05+a.y*.02,rr=RA*(.3+.55*((k*37)%10)/10);ctx.fillStyle='#62aaff';ctx.beginPath();ctx.arc(a.x+rr*Math.cos(t),a.y+rr*Math.sin(t),2,0,7);ctx.fill();}
+    }
+  }
+  // legend
+  const lx=W-24;let ly=H-70;
+  if(S.zmodel==='nuclear'){
+    ctx.fillStyle='#ff6f62';ctx.beginPath();ctx.arc(lx,ly-5,4,0,7);ctx.fill();label('نواة موجبة',lx-12,ly,'#e7f0eb',13,'right');
+    ctx.fillStyle='#62aaff';ctx.beginPath();ctx.arc(lx,ly+17,2.5,0,7);ctx.fill();label('إلكترون سالب',lx-12,ly+22,'#e7f0eb',13,'right');
+  }else{
+    ctx.fillStyle='rgba(255,111,98,.4)';ctx.beginPath();ctx.arc(lx,ly-5,6,0,7);ctx.fill();label('شحنة موجبة منتشرة',lx-12,ly,'#e7f0eb',13,'right');
+    ctx.fillStyle='#62aaff';ctx.beginPath();ctx.arc(lx,ly+17,2.5,0,7);ctx.fill();label('إلكترون سالب',lx-12,ly+22,'#e7f0eb',13,'right');
+  }
+  ctx.fillStyle='#ffa64d';ctx.beginPath();ctx.arc(lx,ly+39,3,0,7);ctx.fill();label('جسيم ألفا (+)',lx-12,ly+44,'#e7f0eb',13,'right');
+  // trails
+  ctx.save();ctx.lineJoin='round';
+  trails.forEach((p,i)=>{const a=.35+.65*(i+1)/trails.length;ctx.strokeStyle=`rgba(255,197,138,${a})`;ctx.lineWidth=2;ctx.beginPath();p.tr.forEach((q,j)=>j?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));ctx.stroke();});
+  ctx.restore();
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  zparts.forEach(p=>{glow(p.x,p.y,8,'255,166,77',.5);ctx.fillStyle='#ffd2a6';ctx.beginPath();ctx.arc(p.x,p.y,2.6,0,7);ctx.fill();});
+  ctx.restore();
+  label('◀ اضغطي لإطلاق جسيم وتتبّع مساره',20,H-18,'#97aba5',13,'left');
+}
+
+/* ---------- loop ---------- */
+let last=performance.now(),zClicks=0,zTime=0;
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;tz+=dt;
+  const id=TABS[S.tab].id;
+  if(id==='zoom'){stepZoom(dt);drawZoom();if(S.on&&S.zmodel==='nuclear')zTime+=dt;}
+  else{stepApparatus(dt);drawApparatus();}
+  updateCounts();check();
+  requestAnimationFrame(frame);
+}
+let lastC='';
+function updateCounts(){
+  const c=S.counts,key=c.t+'|'+c.a+'|'+c.b+'|'+c.c;if(key===lastC)return;lastC=key;
+  const pc=n=>c.t?(100*n/c.t).toFixed(n&&100*n/c.t<1?1:0)+'%':'0%';
+  $('cT').textContent=c.t;$('c1').textContent=c.a;$('c2').textContent=c.b;$('c3').textContent=c.c;
+  $('p1').textContent=pc(c.a);$('p2').textContent=pc(c.b);$('p3').textContent=pc(c.c);
+}
+function check(){
+  const id=TABS[S.tab].id,c=S.counts;let changed=false;
+  if(id==='thomson'&&c.t>=40&&!S.done.has(id)){S.done.add(id);changed=true;}
+  if(id==='real'){
+    if(c.t>=60&&!S.facts.has(0)){S.facts.add(0);changed=true;}
+    if(c.b>=3&&!S.facts.has(1)){S.facts.add(1);changed=true;}
+    if(c.c>=1&&!S.facts.has(2)){S.facts.add(2);changed=true;}
+    if(S.facts.has(0)&&S.facts.has(1)&&S.facts.has(2)&&!S.done.has(id)){S.done.add(id);changed=true;}
+  }
+  if(id==='zoom'&&(zClicks>=3||zTime>8)&&!S.done.has(id)){S.done.add(id);S.facts.add(3);changed=true;}
+  if(changed){renderTabs();renderPred();renderObs();renderFacts();}
+}
+
+/* ---------- UI ---------- */
+function renderTabs(){
+  const nav=$('tabs');nav.innerHTML='';
+  TABS.forEach((t,i)=>{const b=document.createElement('button');b.type='button';b.className='tab'+(S.done.has(t.id)?' done':'');b.setAttribute('role','tab');b.setAttribute('aria-selected',i===S.tab);
+    b.innerHTML=`<span class="n">${S.done.has(t.id)?'✓':i+1}</span>${t.name}`;b.onclick=()=>setTab(i);nav.appendChild(b);});
+}
+function resetCounts(){S.counts={t:0,a:0,b:0,c:0};parts=[];flashes=[];marks=[];lastC='';}
+function setTab(i){
+  S.tab=i;resetCounts();zparts=[];trails=[];
+  $('hint').textContent=TABS[i].hint;
+  $('counts').hidden=TABS[i].id==='zoom';
+  renderTabs();renderCtl();renderPred();renderObs();
+}
+function renderCtl(){
+  const id=TABS[S.tab].id;
+  let h=`<div class="row"><span>${id==='zoom'?'تدفّق جسيمات ألفا':'فتح المصدر المشع'}</span><button class="switch" id="on" type="button" aria-pressed="${S.on}" aria-label="تشغيل المصدر"></button></div>`;
+  if(id!=='zoom'){
+    h+=`<div><div class="row"><label for="rate">معدل الإطلاق</label><span class="val" id="rateV">${S.rate} /s</span></div><input type="range" id="rate" min="2" max="200" step="1" value="${S.rate}"></div>
+    <div class="btns"><button type="button" id="burst">إطلاق 500 جسيم دفعة واحدة</button><button type="button" id="reset">تصفير العدادات</button></div>`;
+  }else{
+    h+=`<div class="row"><span>نموذج الذرة</span></div><div class="seg"><button type="button" data-z="thomson" aria-pressed="${S.zmodel==='thomson'}">نموذج طومسون</button><button type="button" data-z="nuclear" aria-pressed="${S.zmodel==='nuclear'}">النموذج النووي</button></div>
+    <div class="btns"><button type="button" id="aim">إطلاق جسيم نحو نواة مباشرة</button><button type="button" id="clr">مسح المسارات</button></div>
+    <p class="small">قارني مسارات الجسيمات بين النموذجين.</p>`;
+  }
+  $('ctl').innerHTML=h;
+  $('on').onclick=e=>{S.on=!S.on;e.currentTarget.setAttribute('aria-pressed',S.on);};
+  const r=$('rate');if(r)r.oninput=e=>{S.rate=+e.target.value;$('rateV').textContent=S.rate+' /s';};
+  const b=$('burst');if(b)b.onclick=()=>{for(let i=0;i<500;i++){const th=sampleTheta()*(Math.random()<.5?1:-1);const hx=FX+RR*Math.cos(th),hy=FY-RR*Math.sin(th);
+      const rm=RR+9+Math.random()*16;marks.push({x:FX+rm*Math.cos(th),y:FY-rm*Math.sin(th)});if(Math.random()<.15)flashes.push({x:hx,y:hy,life:.6});
+      const a=Math.abs(th)/DEG,c=S.counts;c.t++;if(a<10)c.a++;else if(a<90)c.b++;else c.c++;}
+    if(marks.length>2500)marks.splice(0,marks.length-2500);};
+  const rs=$('reset');if(rs)rs.onclick=resetCounts;
+  document.querySelectorAll('[data-z]').forEach(x=>x.onclick=()=>{S.zmodel=x.dataset.z;zparts=[];trails=[];renderCtl();});
+  const aim=$('aim');if(aim)aim.onclick=()=>{const rows=[...new Set(ATOMS.filter(a=>a.x<460).map(a=>a.y))];zSpawn(rows[Math.floor(Math.random()*rows.length)]+(Math.random()-.5)*0.6,true);zClicks++;};
+  const clr=$('clr');if(clr)clr.onclick=()=>{trails=[];};
+}
+cv.addEventListener('click',e=>{if(TABS[S.tab].id!=='zoom')return;const r=cv.getBoundingClientRect();const y=(e.clientY-r.top)/r.height*H;zSpawn(y,true);zClicks++;});
+function renderPred(){
+  const T=TABS[S.tab],ch=S.pred[T.id],done=S.done.has(T.id);
+  $('q').textContent=T.q;const box=$('opts');box.innerHTML='';
+  T.opts.forEach((o,i)=>{const b=document.createElement('button');b.type='button';b.className='opt';b.textContent=o;
+    if(ch!==undefined){if(i===ch)b.classList.add(i===T.ans?'right':'wrong');if(done&&i===T.ans)b.classList.add('right');}
+    b.onclick=()=>{S.pred[T.id]=i;renderPred();};box.appendChild(b);});
+  $('fb').textContent=ch===undefined?'اختاري توقّعك أولًا ثم نفّذي التجربة.':(ch===T.ans?'توقّع صحيح. نفّذي التجربة للتحقق منه.':(done?'الإجابة الصحيحة ظاهرة باللون الأخضر.':'نفّذي التجربة ولاحظي، ثم قارني بتوقّعك.'));
+}
+function renderObs(){
+  const T=TABS[S.tab];
+  $('obs').innerHTML=S.done.has(T.id)?`<p>${T.obs}</p><div class="conc">الاستنتاج: ${T.conc}</div>`:`<p class="locked">نفّذي التجربة لتظهر المشاهدة والاستنتاج.</p>`;
+}
+function renderFacts(){
+  $('facts').innerHTML=FACTS.map((f,i)=>`<div class="fact${S.facts.has(i)?' done':''}"><span class="k">${S.facts.has(i)?'✓ ':''}المشاهدة ${i+1}</span><span class="o">${f.k}</span><span>${S.facts.has(i)?'← '+f.c:'؟'}</span></div>`).join('');
+  if(S.facts.size===FACTS.length||S.showFinal)
+    $('finaltext').innerHTML='النتيجة: اقترح رذرفورد <b>النموذج النووي</b> للذرة: معظم حجم الذرة فراغ، وفي مركزها <b>نواة صغيرة جدًا موجبة الشحنة</b> تتركز فيها معظم كتلة الذرة، وتتحرك الإلكترونات السالبة في الفراغ حولها، وعددها يساوي عدد الشحنات الموجبة فتكون الذرة متعادلة.';
+}
+$('showFinal').onclick=()=>{S.showFinal=true;renderFacts();};
+$('fs').onclick=()=>{try{const d=document;if(d.fullscreenElement)d.exitFullscreen();else d.documentElement.requestFullscreen().catch(()=>{});}catch(e){}};
+
+resize();setTab(0);renderFacts();requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

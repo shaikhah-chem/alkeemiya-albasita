@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>ميزان شحنات الذرة</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Reem+Kufi:wght@500;700&display=swap">
+<style>
+/* Layout: atom canvas + charge balance on the stage side; particle controls, challenge and quiz in the side column. */
+:root{
+  --bg:#0c1413; --panel:#141f1e; --panel2:#1a2826; --line:#2b3d3a;
+  --fg:#e7f0eb; --muted:#97aba5;
+  --pro:#ff6f62; --neu:#b9c4c0; --ele:#62aaff; --amber:#f2c14e; --ok:#6fe0a0; --bad:#ff8a7a;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.6}
+.wrap{max-width:1320px;margin:0 auto;padding-block:18px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.credit{margin-bottom:-10px;font-size:13px;color:var(--muted);opacity:.7;text-align:left}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.eyebrow{font-size:13px;color:var(--amber)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3.4vw,40px);line-height:1.2;margin:2px 0 0;text-wrap:balance}
+h1 .p{color:var(--pro)} h1 .e{color:var(--ele)}
+h2{font-family:var(--f-display);font-weight:500;font-size:18px;margin:0;color:var(--amber)}
+button{font-family:inherit;font-size:15px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer;transition:border-color .15s}
+button:hover{border-color:var(--amber)}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+button:disabled{opacity:.4;cursor:not-allowed}
+.primary{background:var(--amber);color:#1b1404;border-color:var(--amber);font-weight:700}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:minmax(0,1fr)}}
+.stage{background:radial-gradient(110% 90% at 50% 40%,#132220 0%,#0a1110 72%);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.elname{font-family:var(--f-display);font-size:24px}
+.elname small{font-family:var(--f-body);font-size:15px;color:var(--muted);margin-inline-start:8px}
+.state{font-size:16px;font-weight:700;padding:6px 14px;border-radius:999px;border:2px solid var(--line)}
+.state.n{border-color:var(--ok);color:var(--ok)} .state.p{border-color:var(--pro);color:var(--pro)} .state.m{border-color:var(--ele);color:var(--ele)}
+.viz{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;align-items:center}
+@media (max-width:700px){.viz{grid-template-columns:minmax(0,1fr)}}
+canvas{width:100%;height:auto;display:block;max-width:100%}
+#atom{aspect-ratio:1/1}
+#scale{aspect-ratio:520/360}
+.eq{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-family:var(--f-display);font-size:clamp(20px,2.6vw,30px);direction:ltr;font-variant-numeric:tabular-nums;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.eq .p{color:var(--pro)} .eq .e{color:var(--ele)} .eq .r{color:var(--ok)} .eq .lbl{font-family:var(--f-body);font-size:13px;color:var(--muted);display:block;text-align:center;direction:rtl}
+.eq > span{display:flex;flex-direction:column;align-items:center}
+aside{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.pt{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:8px}
+.dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#0c1413}
+.pt .nm{font-size:16px}
+.pt .nm small{display:block;font-size:12px;color:var(--muted)}
+.pt .cnt{font-family:var(--f-display);font-size:24px;min-width:34px;text-align:center;font-variant-numeric:tabular-nums}
+.pt button{width:40px;height:40px;padding:0;font-size:22px;line-height:1}
+.els{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;direction:ltr}
+.els button{padding:6px 0;font-size:14px;font-weight:700}
+.els button[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
+.msg{margin:0;font-size:15px}
+.msg.ok{color:var(--ok)} .msg.bad{color:var(--bad)}
+.note{color:var(--muted);font-size:14px;margin:0}
+.facts{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:860px){.facts{grid-template-columns:minmax(0,1fr)}}
+.fact{display:flex;gap:10px;align-items:flex-start}
+.fact .dot{width:34px;height:34px;font-size:18px;flex:none}
+.fact b{display:block;font-size:17px}
+.fact span{color:var(--muted);font-size:15px}
+.quiz{display:flex;flex-direction:column;gap:8px}
+.quiz .q{margin:0;font-weight:500}
+.quiz .opts{display:flex;flex-direction:column;gap:6px}
+.quiz .opt{text-align:right}
+.opt.right{border-color:var(--ok);color:var(--ok)} .opt.wrong{border-color:var(--bad);color:var(--bad)}
+.qnav{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.qnav span{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.big{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;font-size:18px}
+.big b{color:var(--ok)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" dir="rtl">
+  <div class="credit">تنفيذ المعلمة: أ. شيخه المطيري</div>
+  <header>
+    <div>
+      <div class="eyebrow">كيمياء 1 · تعريف الذرة · محاكاة تفاعلية</div>
+      <h1>لماذا الذرة <span class="p">متعادلة</span> <span class="e">كهربائيًا؟</span></h1>
+    </div>
+    <button id="fs" type="button">ملء الشاشة</button>
+  </header>
+
+  <section class="facts">
+    <div class="fact"><span class="dot" style="background:var(--pro)">+</span><div><b>البروتون: شحنته +1</b><span>يوجد في النواة</span></div></div>
+    <div class="fact"><span class="dot" style="background:var(--neu)">0</span><div><b>النيوترون: متعادل الشحنة</b><span>يوجد في النواة، لا يؤثر في شحنة الذرة</span></div></div>
+    <div class="fact"><span class="dot" style="background:var(--ele)">−</span><div><b>الإلكترون: شحنته −1</b><span>يتحرك في الفراغ حول النواة</span></div></div>
+  </section>
+
+  <div class="main">
+    <section class="stage">
+      <div class="top">
+        <div class="elname" id="elname"></div>
+        <div class="state" id="state"></div>
+      </div>
+      <div class="viz">
+        <canvas id="atom" aria-label="رسم الذرة"></canvas>
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <canvas id="scale" aria-label="ميزان الشحنات"></canvas>
+          <div class="eq" id="eq"></div>
+        </div>
+      </div>
+      <p class="note">رسم توضيحي: الأحجام والمسافات غير حقيقية، والنواة أصغر بكثير من الذرة.</p>
+    </section>
+
+    <aside>
+      <div class="card">
+        <h2>ابني الذرة</h2>
+        <div class="pt"><span class="dot" style="background:var(--pro)">+</span><span class="nm">بروتونات<small>تحدد نوع العنصر</small></span><button type="button" id="p-" aria-label="إزالة بروتون">−</button><span class="cnt" id="pc">0</span><button type="button" id="p+" aria-label="إضافة بروتون">+</button></div>
+        <div class="pt"><span class="dot" style="background:var(--neu)">0</span><span class="nm">نيوترونات<small>لا تغيّر الشحنة</small></span><button type="button" id="n-" aria-label="إزالة نيوترون">−</button><span class="cnt" id="nc">0</span><button type="button" id="n+" aria-label="إضافة نيوترون">+</button></div>
+        <div class="pt"><span class="dot" style="background:var(--ele)">−</span><span class="nm">إلكترونات<small>تدور حول النواة</small></span><button type="button" id="e-" aria-label="إزالة إلكترون">−</button><span class="cnt" id="ec">0</span><button type="button" id="e+" aria-label="إضافة إلكترون">+</button></div>
+        <div class="els" id="els"></div>
+      </div>
+
+      <div class="card">
+        <h2>تحدّي التعادل</h2>
+        <p class="msg" id="chMsg">اضغطي «تحدٍّ جديد»، ثم اجعلي الذرة متعادلة بتغيير عدد الإلكترونات فقط.</p>
+        <button type="button" class="primary" id="chNew">تحدٍّ جديد</button>
+      </div>
+
+      <div class="card">
+        <h2>اختبري فهمك</h2>
+        <div class="quiz" id="quiz"></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="big" id="big">الذرة متعادلة كهربائيًا لأن <b>عدد البروتونات الموجبة يساوي عدد الإلكترونات السالبة</b>، وشحنة البروتون تساوي شحنة الإلكترون في المقدار وتعاكسها في النوع، فتلغي كل شحنة موجبة شحنةً سالبة.</div>
+</div>
+
+<script>
+(function(){
+const EL=[null,['H','هيدروجين',0],['He','هيليوم',2],['Li','ليثيوم',4],['Be','بيريليوم',5],['B','بورون',6],['C','كربون',6],['N','نيتروجين',7],['O','أكسجين',8],['F','فلور',10],['Ne','نيون',10],['Na','صوديوم',12],['Mg','مغنيسيوم',12],['Al','ألومنيوم',14],['Si','سيليكون',14],['P','فوسفور',16],['S','كبريت',16],['Cl','كلور',18],['Ar','أرجون',22]];
+const MAXP=18,MAXN=24,MAXE=20,SH=[2,8,8,2],SR=[0.33,0.55,0.77,0.93];
+const S={p:6,n:6,e:6,ch:null};
+const $=id=>document.getElementById(id);
+
+/* ---------- electrons with animated positions ---------- */
+let elecs=[];
+function syncElectrons(){
+  while(elecs.length<S.e){const a=Math.random()*6.28;elecs.push({x:Math.cos(a)*1.4,y:Math.sin(a)*1.4,leaving:false});}
+  let alive=elecs.filter(e=>!e.leaving);
+  while(alive.length>S.e){const e=alive.pop();e.leaving=true;}
+}
+function target(i,t){
+  let s=0,k=i;while(s<SH.length-1&&k>=SH[s]){k-=SH[s];s++;}
+  const before=SH.slice(0,s).reduce((a,b)=>a+b,0),cnt=Math.max(1,Math.min(SH[s],S.e-before));
+  const a=t*(0.6-s*0.12)+k/cnt*Math.PI*2+s*0.4;
+  return [Math.cos(a)*SR[s],Math.sin(a)*SR[s],s];
+}
+
+/* ---------- nucleus layout ---------- */
+let order=[];
+function nucOrder(){
+  const arr=[];let p=S.p,n=S.n;
+  for(let i=0;p+n>0;i++){ if(p>0&&(n===0||(i%2===0))){arr.push('p');p--;}else{arr.push('n');n--;} }
+  order=arr;
+}
+
+/* ---------- drawing ---------- */
+const ca=$('atom'),cx=ca.getContext('2d'),cs=$('scale'),sx=cs.getContext('2d');
+function fit(c,ctx,w,h){const d=window.devicePixelRatio||1,cw=c.clientWidth||w;c.width=Math.round(cw*d);c.height=Math.round(cw*h/w*d);ctx.setTransform(cw/w*d,0,0,cw/w*d,0,0);}
+function resize(){fit(ca,cx,520,520);fit(cs,sx,520,360);}
+window.addEventListener('resize',resize);
+function ball(ctx,x,y,r,col,sign,dark){
+  const g=ctx.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);g.addColorStop(0,'#ffffff');g.addColorStop(.25,col);g.addColorStop(1,dark);
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+  if(sign){ctx.fillStyle='#0c1413';ctx.font=`700 ${Math.round(r*1.3)}px Tahoma`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sign,x,y+1);}
+}
+function drawAtom(t){
+  const C=260,RR=240;cx.clearRect(0,0,520,520);
+  // shells
+  const used=Math.max(1,S.e<=2?1:S.e<=10?2:S.e<=18?3:4);
+  for(let s=0;s<used;s++){cx.save();cx.setLineDash([3,6]);cx.strokeStyle='rgba(98,170,255,.25)';cx.lineWidth=1.2;cx.beginPath();cx.arc(C,C,SR[s]*RR,0,7);cx.stroke();cx.restore();}
+  // nucleus
+  const r=11,N=order.length;
+  const g=cx.createRadialGradient(C,C,0,C,C,Math.max(40,Math.sqrt(N)*14+20));g.addColorStop(0,'rgba(255,111,98,.18)');g.addColorStop(1,'rgba(255,111,98,0)');
+  cx.fillStyle=g;cx.fillRect(0,0,520,520);
+  for(let i=N-1;i>=0;i--){const rr=r*1.05*Math.sqrt(i),a=i*2.39996;const x=C+rr*Math.cos(a),y=C+rr*Math.sin(a);
+    order[i]==='p'?ball(cx,x,y,r,'#ff6f62','+','#8f2a22'):ball(cx,x,y,r,'#b9c4c0','','#4f5a57');}
+  // electrons
+  let idx=0;
+  elecs.forEach(e=>{
+    let tx,ty;
+    if(e.leaving){const a=Math.atan2(e.y,e.x);tx=Math.cos(a)*1.5;ty=Math.sin(a)*1.5;}
+    else{[tx,ty]=target(idx++,t);}
+    e.x+=(tx-e.x)*0.12;e.y+=(ty-e.y)*0.12;
+  });
+  elecs=elecs.filter(e=>!(e.leaving&&Math.hypot(e.x,e.y)>1.35));
+  elecs.forEach(e=>{const x=C+e.x*RR,y=C+e.y*RR;
+    const gg=cx.createRadialGradient(x,y,0,x,y,16);gg.addColorStop(0,'rgba(98,170,255,.45)');gg.addColorStop(1,'rgba(98,170,255,0)');cx.fillStyle=gg;cx.fillRect(x-16,y-16,32,32);
+    ball(cx,x,y,8,'#62aaff','−','#1f4f8f');});
+}
+let tilt=0;
+function drawScale(){
+  const c=sx;c.clearRect(0,0,520,360);
+  const net=S.p-S.e,goal=Math.max(-1,Math.min(1,net/4))*0.26;tilt+=(goal-tilt)*0.08;
+  const px=260,py=110,L=180;
+  // stand
+  c.fillStyle='#2b3d3a';c.beginPath();c.moveTo(px-50,330);c.lineTo(px+50,330);c.lineTo(px+10,py);c.lineTo(px-10,py);c.closePath();c.fill();
+  c.fillStyle='#3a4f4b';c.fillRect(px-80,330,160,10);
+  // beam: left pan = positive (higher positive => left goes down)
+  const lx=px-L*Math.cos(tilt),ly=py+L*Math.sin(tilt),rx=px+L*Math.cos(tilt),ry=py-L*Math.sin(tilt);
+  c.strokeStyle='#d8c08a';c.lineWidth=7;c.lineCap='round';c.beginPath();c.moveTo(lx,ly);c.lineTo(rx,ry);c.stroke();
+  c.fillStyle='#f2c14e';c.beginPath();c.arc(px,py,9,0,7);c.fill();
+  // pointer
+  c.save();c.translate(px,py);c.rotate(-tilt);c.strokeStyle=net===0?'#6fe0a0':'#f2c14e';c.lineWidth=3;c.beginPath();c.moveTo(0,0);c.lineTo(0,-60);c.stroke();c.restore();
+  c.save();c.strokeStyle='rgba(111,224,160,.5)';c.setLineDash([3,4]);c.beginPath();c.moveTo(px,py-14);c.lineTo(px,py-78);c.stroke();c.restore();
+  // pans
+  function pan(x,y,n,col,dark,sign,title){
+    const hy=y+80;c.strokeStyle='rgba(216,192,138,.7)';c.lineWidth=1.5;c.beginPath();c.moveTo(x,y);c.lineTo(x-62,hy);c.moveTo(x,y);c.lineTo(x+62,hy);c.stroke();
+    c.fillStyle='#3a4f4b';c.beginPath();c.ellipse(x,hy,72,12,0,0,7);c.fill();
+    for(let i=0;i<n;i++){const row=Math.floor(i/7),k=i%7,cnt=Math.min(7,n-row*7);const bx=x+(k-(cnt-1)/2)*17,by=hy-12-row*16;ball(c,bx,by,8,col,sign,dark);}
+    c.save();c.direction='rtl';c.font='600 15px "IBM Plex Sans Arabic",Tahoma';c.textAlign='center';c.fillStyle=col;c.fillText(title,x,hy+34);c.restore();
+  }
+  pan(lx,ly,S.p,'#ff6f62','#8f2a22','+','الشحنات الموجبة');
+  pan(rx,ry,S.e,'#62aaff','#1f4f8f','−','الشحنات السالبة');
+}
+
+/* ---------- UI ---------- */
+function ui(){
+  const e=EL[S.p];
+  $('elname').innerHTML=S.p?`ذرة ${e[1]} <span dir="ltr">${e[0]}</span><small>العدد الذري ${S.p}</small>`:'لا يوجد عنصر';
+  const net=S.p-S.e,st=$('state');
+  if(net===0){st.className='state n';st.textContent='متعادلة كهربائيًا ✓';}
+  else if(net>0){st.className='state p';st.innerHTML=`شحنتها موجبة <span dir="ltr">+${net}</span> (أيون موجب)`;}
+  else{st.className='state m';st.innerHTML=`شحنتها سالبة <span dir="ltr">${net}</span> (أيون سالب)`;}
+  $('pc').textContent=S.p;$('nc').textContent=S.n;$('ec').textContent=S.e;
+  $('p-').disabled=S.p<=1;$('p+').disabled=S.p>=MAXP;$('n-').disabled=S.n<=0;$('n+').disabled=S.n>=MAXN;$('e-').disabled=S.e<=0;$('e+').disabled=S.e>=MAXE;
+  const sgn=net>0?'+'+net:net<0?'−'+(-net):'0';
+  $('eq').innerHTML=`<span class="p">(+${S.p})<span class="lbl">بروتونات</span></span><span>+</span><span class="e">(−${S.e})<span class="lbl">إلكترونات</span></span><span>=</span><span class="${net===0?'r':net>0?'p':'e'}">${sgn}<span class="lbl">شحنة الذرة</span></span>`;
+  document.querySelectorAll('#els button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.z===S.p));
+  if(S.ch){
+    const m=$('chMsg');
+    if(S.p!==S.ch.p){m.className='msg bad';m.textContent=`انتبهي: تغيّر عدد البروتونات فتغيّر العنصر نفسه! أعيدي البروتونات إلى ${S.ch.p} وعدّلي الإلكترونات فقط.`;}
+    else if(net===0){m.className='msg ok';m.textContent=`أحسنتِ! ذرة ال${EL[S.ch.p][1]} متعادلة لأن عدد البروتونات ${S.p} يساوي عدد الإلكترونات ${S.e}.`;}
+    else{m.className='msg';m.textContent=`ذرة ${EL[S.ch.p][1]} عدد البروتونات فيها ${S.ch.p}. اجعليها متعادلة بتغيير عدد الإلكترونات فقط.`;}
+  }
+}
+function set(p,n,e){S.p=p;S.n=n;S.e=e;nucOrder();syncElectrons();ui();}
+const step=(k,d)=>()=>{const v={p:S.p,n:S.n,e:S.e};v[k]+=d;set(v.p,v.n,v.e);};
+['p','n','e'].forEach(k=>{$(k+'+').onclick=step(k,1);$(k+'-').onclick=step(k,-1);});
+$('els').innerHTML=EL.slice(1).map((e,i)=>`<button type="button" data-z="${i+1}" title="${e[1]}">${e[0]}</button>`).join('');
+$('els').querySelectorAll('button').forEach(b=>b.onclick=()=>{const z=+b.dataset.z;S.ch=null;$('chMsg').className='msg';$('chMsg').textContent='اضغطي «تحدٍّ جديد»، ثم اجعلي الذرة متعادلة بتغيير عدد الإلكترونات فقط.';set(z,EL[z][2],z);});
+$('chNew').onclick=()=>{const z=2+Math.floor(Math.random()*16);let d=0;while(!d)d=Math.floor(Math.random()*7)-3;const e=Math.max(0,Math.min(MAXE,z+d));S.ch={p:z};set(z,EL[z][2],e===z?z+1:e);};
+$('fs').onclick=()=>{try{const d=document;if(d.fullscreenElement)d.exitFullscreen();else d.documentElement.requestFullscreen().catch(()=>{});}catch(e){}};
+
+/* ---------- quiz ---------- */
+const Q=[
+ ['لماذا تكون الذرة متعادلة كهربائيًا؟',['لأن عدد البروتونات يساوي عدد الإلكترونات','لأن عدد النيوترونات يساوي عدد البروتونات','لأن النواة متعادلة الشحنة'],0],
+ ['ذرة أكسجين فيها 8 بروتونات. كم إلكترونًا تحتاج لتكون متعادلة؟',['16 إلكترونًا','8 إلكترونات','4 إلكترونات'],1],
+ ['ماذا يحدث لشحنة الذرة إذا أضفنا إليها نيوترونًا؟',['تصبح موجبة','تصبح سالبة','لا تتغير'],2],
+ ['ماذا يحدث إذا تغيّر عدد البروتونات في الذرة؟',['يتغير نوع العنصر','تتغير الكتلة فقط','لا يحدث شيء'],0],
+ ['ذرة فيها 11 بروتونًا و10 إلكترونات. ما شحنتها؟',['متعادلة','موجبة','سالبة'],1]
+];
+let qi=0,score=0;const ans={};
+function renderQ(){
+  const q=Q[qi],box=$('quiz'),ch=ans[qi];
+  box.innerHTML=`<p class="q">${q[0]}</p><div class="opts">${q[1].map((o,i)=>`<button type="button" class="opt${ch!==undefined?(i===q[2]?' right':(i===ch?' wrong':'')):''}" data-i="${i}">${o}</button>`).join('')}</div>
+  <div class="qnav"><button type="button" id="qPrev" ${qi===0?'disabled':''}>السابق</button><span>السؤال ${qi+1} من ${Q.length} · الصحيح ${score}</span><button type="button" id="qNext" ${qi===Q.length-1?'disabled':''}>التالي</button></div>`;
+  box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(ans[qi]!==undefined)return;ans[qi]=+b.dataset.i;if(ans[qi]===q[2])score++;renderQ();});
+  $('qPrev').onclick=()=>{qi--;renderQ();};$('qNext').onclick=()=>{qi++;renderQ();};
+}
+
+/* ---------- loop ---------- */
+let t0=performance.now();
+function frame(now){const t=(now-t0)/1000;drawAtom(t);drawScale();requestAnimationFrame(frame);}
+resize();set(6,6,6);renderQ();requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
