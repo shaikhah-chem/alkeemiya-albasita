@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>ساحة ألعاب كيمياء 2-1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap">
+<style>
+/* Layout: lesson rail on top, three game tiles, then a single play arena that swaps between games. */
+:root{
+  --bg:#f3f7fb; --card:#ffffff; --ink:#1d2b4f; --muted:#5d6b88; --line:#d8e1ee;
+  --blue:#3b6fe0; --coral:#f0645a; --mint:#1fae8a; --sun:#ffb932; --lilac:#8a6cf0;
+  --ok:#17a673; --bad:#e04d4d; --soft:#eaf0fb;
+  --f-display:"Baloo Bhaijaan 2","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111a2b;--card:#18233a;--ink:#eaf0ff;--muted:#9fb0d0;--line:#2a3958;--soft:#1f2c48;--blue:#6f97ff;--coral:#ff7e74;--mint:#3fd2aa;--sun:#ffc85a;--lilac:#a891ff;--ok:#3fd29a;--bad:#ff7070;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111a2b;--card:#18233a;--ink:#eaf0ff;--muted:#9fb0d0;--line:#2a3958;--soft:#1f2c48;--blue:#6f97ff;--coral:#ff7e74;--mint:#3fd2aa;--sun:#ffc85a;--lilac:#a891ff;--ok:#3fd29a;--bad:#ff7070;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:17px;line-height:1.6}
+.wrap{max-width:1200px;margin:0 auto;padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.credit{font-size:13px;color:var(--muted);text-align:left;margin-bottom:-8px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,4vw,44px);line-height:1.15;margin:0}
+h1 span{color:var(--blue)}
+.sub{color:var(--muted);margin:0}
+button{font-family:inherit;font-size:16px;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 14px;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}
+button:hover{border-color:var(--blue)}
+button:active{transform:scale(.97)}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.tools{display:flex;gap:8px}
+.rail{display:flex;flex-direction:column;gap:8px}
+.chap{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chap b{font-family:var(--f-display);font-size:17px;color:var(--muted);min-width:max-content}
+.lesson[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+.games{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:720px){.games{grid-template-columns:minmax(0,1fr)}}
+.gtile{display:flex;align-items:center;gap:12px;text-align:right;padding:14px;border-radius:18px}
+.gtile .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-family:var(--f-display);font-size:26px;font-weight:800;color:#fff;flex:none}
+.gtile b{display:block;font-family:var(--f-display);font-size:21px;line-height:1.2}
+.gtile small{color:var(--muted);font-size:14px}
+.gtile[aria-pressed="true"]{border-color:var(--ink);background:var(--soft)}
+.arena{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px;min-height:440px;display:flex;flex-direction:column;gap:14px}
+.ahead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ahead h2{font-family:var(--f-display);font-size:24px;margin:0}
+.ahead h2 small{font-family:var(--f-body);font-size:15px;color:var(--muted);font-weight:500;margin-inline-start:8px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{background:var(--soft);border-radius:999px;padding:4px 12px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.ok{color:var(--ok)} .stat.bad{color:var(--bad)}
+.prog{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--blue);transition:width .3s}
+/* classify */
+.item{align-self:center;max-width:620px;width:100%;text-align:center;font-family:var(--f-display);font-size:clamp(24px,3.4vw,36px);font-weight:700;background:var(--soft);border:3px dashed var(--line);border-radius:20px;padding:22px 18px;line-height:1.3}
+.item.ok{border-color:var(--ok);border-style:solid} .item.bad{border-color:var(--bad);border-style:solid;animation:shake .35s}
+.buckets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:560px){.buckets{grid-template-columns:minmax(0,1fr)}}
+.bucket{min-height:150px;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:stretch;color:var(--ink)}
+.bucket .bt{font-family:var(--f-display);font-size:24px;font-weight:800;color:#fff;border-radius:12px;padding:6px 10px;text-align:center}
+.bucket .in{display:flex;flex-wrap:wrap;gap:6px}
+.bucket .in span{font-size:14px;background:var(--soft);border-radius:999px;padding:2px 10px}
+/* memory */
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mc{position:relative;aspect-ratio:4/3;max-width:100%;border:none;padding:0;background:none;perspective:900px}
+.mc .f,.mc .b{position:absolute;inset:0;border-radius:16px;display:grid;place-items:center;padding:8px;backface-visibility:hidden;transition:transform .45s;text-align:center}
+.mc .b{background:var(--lilac);color:#fff;font-family:var(--f-display);font-size:34px;font-weight:800}
+.mc .f{background:var(--card);border:3px solid var(--line);transform:rotateY(180deg);font-size:clamp(13px,1.6vw,16px);line-height:1.35}
+.mc .f.term{font-family:var(--f-display);font-size:clamp(17px,2.2vw,23px);font-weight:700;color:var(--blue)}
+.mc.open .b{transform:rotateY(180deg)} .mc.open .f{transform:rotateY(360deg)}
+.mc.done .f{border-color:var(--ok);background:var(--soft)}
+.mc.miss .f{border-color:var(--bad)}
+/* tf */
+.q{align-self:center;max-width:760px;width:100%;text-align:center;font-family:var(--f-display);font-size:clamp(23px,3.2vw,34px);font-weight:700;line-height:1.35;padding:18px;border-radius:20px;background:var(--soft)}
+.timer{height:12px;border-radius:99px;background:var(--soft);overflow:hidden}
+.timer i{display:block;height:100%;background:var(--sun)}
+.tfb{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.tfb button{font-family:var(--f-display);font-size:30px;font-weight:800;padding:18px;color:#fff;border:none;border-radius:20px}
+.tfb .t{background:var(--mint)} .tfb .f{background:var(--coral)}
+.tfb button:disabled{opacity:.45;cursor:default}
+.why{text-align:center;font-size:18px;min-height:1.6em;margin:0}
+.why.ok{color:var(--ok)} .why.bad{color:var(--bad)}
+/* end */
+.end{align-self:center;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding:20px}
+.stars{font-size:54px;letter-spacing:6px;color:var(--sun);line-height:1}
+.stars .off{color:var(--line)}
+.end h3{font-family:var(--f-display);font-size:34px;margin:0}
+.end p{margin:0;color:var(--muted);font-size:18px}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+.next{align-self:center}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pop{0%{transform:scale(.9)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
+.pop{animation:pop .35s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap" dir="rtl">
+  <div class="credit">تنفيذ المعلمة: أ. شيخه المطيري</div>
+  <header>
+    <div>
+      <h1>ساحة ألعاب <span>كيمياء <bdi dir="ltr">2-1</bdi></span></h1>
+      <p class="sub">اختاري الدرس ثم اللعبة</p>
+    </div>
+    <div class="tools">
+      <button type="button" id="snd" aria-pressed="true">الصوت: يعمل</button>
+      <button type="button" id="fs">ملء الشاشة</button>
+    </div>
+  </header>
+
+  <nav class="rail" id="rail"></nav>
+  <div class="games" id="games"></div>
+  <section class="arena" id="arena" aria-live="polite"></section>
+</div>
+
+<script>
+(function(){
+const D={
+c11:{ch:1,name:'الضوء وطاقة الكم',
+ cls:{a:'الطبيعة الموجية للضوء',b:'الطبيعة الجسيمية للضوء',items:[['الطول الموجي','a'],['التردد','a'],['الفوتون','b'],['التأثير الكهروضوئي','b'],['السعة','a'],['كم الطاقة','b'],['الحيود والتداخل','a'],['ثابت بلانك في E = hν','b']]},
+ mem:[['الطول الموجي λ','المسافة بين قمتين متتاليتين'],['التردد ν','عدد الموجات التي تعبر نقطة في الثانية'],['الكم','أقل كمية من الطاقة تكتسبها الذرة أو تفقدها'],['الفوتون','جسيم عديم الكتلة يحمل كمًّا من الطاقة'],['طيف الانبعاث الذري','ترددات الضوء المنبعثة من ذرات العنصر'],['الطيف المتصل','طيف الضوء الأبيض بجميع ألوانه']],
+ tf:[['العلاقة بين الطول الموجي والتردد عكسية.',1,''],['كلما زاد تردد الفوتون قلت طاقته.',0,'طاقة الفوتون تتناسب طرديًا مع التردد.'],['لكل عنصر طيف انبعاث ذري مميز.',1,''],['تسير جميع الموجات الكهرومغناطيسية في الفراغ بسرعة الضوء.',1,''],['يحدث التأثير الكهروضوئي بأي تردد إذا كان الضوء شديدًا.',0,'يحتاج إلى تردد أدنى معين مهما كانت شدة الضوء.'],['طيف الانبعاث الذري طيف متصل.',0,'طيف الانبعاث الذري خطوط منفصلة محددة.'],['الأشعة فوق البنفسجية أعلى طاقة من الأشعة تحت الحمراء.',1,''],['الضوء المرئي جزء صغير من الطيف الكهرومغناطيسي.',1,'']]},
+c12:{ch:1,name:'نظرية الكم والذرة',
+ cls:{a:'نموذج بور',b:'النموذج الميكانيكي الكمي',items:[['الإلكترون يدور في مدارات دائرية محددة','a'],['فسّر طيف ذرة الهيدروجين فقط','a'],['يصف احتمال وجود الإلكترون','b'],['يعتمد على معادلة شرودنجر','b'],['يستعمل المستويات الفرعية s و p و d و f','b'],['لم يفسر أطياف الذرات الأكبر','a'],['يتوافق مع مبدأ الشك لهايزنبرج','b'],['مسار الإلكترون محدد بدقة','a']]},
+ mem:[['حالة الاستقرار','أقل حالة طاقة للذرة'],['حالة الإثارة','الذرة تمتلك طاقة أعلى من حالة الاستقرار'],['دي برولي','اقترح أن للإلكترون خصائص موجية'],['مبدأ الشك','لا يمكن تحديد موقع الإلكترون وسرعته معًا بدقة'],['مستوى الطاقة الرئيس n','يحدد الحجم والطاقة النسبيين للمستويات'],['المستويات الفرعية','s و p و d و f']],
+ tf:[['يطلق الإلكترون طاقة عندما ينتقل من مستوى أعلى إلى أقل.',1,''],['يمكن تحديد موقع الإلكترون وسرعته بدقة في الوقت نفسه.',0,'مبدأ الشك لهايزنبرج ينفي ذلك.'],['يحتوي مستوى الطاقة الرئيس الأول على المستوى الفرعي s فقط.',1,''],['نجح نموذج بور في تفسير أطياف جميع الذرات.',0,'نجح مع الهيدروجين فقط.'],['يحتوي المستوى الفرعي p على ثلاثة مستويات.',1,''],['يزداد عدد المستويات الفرعية بزيادة رقم مستوى الطاقة الرئيس.',1,''],['اقترح دي برولي أن الإلكترون جسيم فقط.',0,'اقترح أن للإلكترون خصائص موجية أيضًا.'],['النموذج الميكانيكي الكمي يحدد مسارًا دقيقًا للإلكترون.',0,'يحدد مناطق احتمالية وجوده فقط.']]},
+c13:{ch:1,name:'التوزيع الإلكتروني',
+ cls:{a:'توزيع صحيح',b:'توزيع خاطئ',items:[['1s² 2s² 2p⁴','a'],['1s² 2s³','b'],['1s² 2s² 2p⁶ 3s¹','a'],['1s² 2p²','b'],['[Ne] 3s² 3p⁵','a'],['1s² 2s² 2p⁷','b'],['[Ar] 4s¹','a'],['1s³ 2s¹','b']]},
+ mem:[['مبدأ أوفباو','يشغل الإلكترون المستوى الأقل طاقة أولًا'],['مبدأ باولي','يتسع المستوى لإلكترونين بغزلين متعاكسين'],['قاعدة هوند','تتوزع الإلكترونات منفردة قبل أن تزدوج'],['إلكترونات التكافؤ','إلكترونات مستوى الطاقة الخارجي'],['التمثيل النقطي','رمز العنصر ونقاط تمثل إلكترونات التكافؤ'],['ترميز الغاز النبيل','اختصار التوزيع برمز الغاز النبيل السابق']],
+ tf:[['يتسع المستوى الفرعي p لستة إلكترونات.',1,''],['في التمثيل النقطي نرسم جميع إلكترونات الذرة.',0,'نرسم إلكترونات التكافؤ فقط.'],['يمتلئ المستوى 4s قبل المستوى 3d.',1,''],['يتسع المستوى الفرعي d لعشرة إلكترونات.',1,''],['حسب قاعدة هوند تزدوج الإلكترونات أولًا.',0,'تتوزع منفردة أولًا ثم تزدوج.'],['للصوديوم إلكترون تكافؤ واحد.',1,''],['التوزيع الإلكتروني للنيون ينتهي بـ 2p⁶.',1,''],['يتسع المستوى الواحد لثلاثة إلكترونات.',0,'يتسع لإلكترونين فقط.']]},
+c21:{ch:2,name:'تطور الجدول الدوري الحديث',
+ cls:{a:'فلزات',b:'لافلزات',items:[['الصوديوم','a'],['الكبريت','b'],['الحديد','a'],['الأكسجين','b'],['النحاس','a'],['الكلور','b'],['المغنيسيوم','a'],['النيتروجين','b']]},
+ mem:[['مندليف','رتب العناصر حسب الكتلة الذرية'],['موزلي','رتب العناصر حسب العدد الذري'],['القانون الدوري','تكرار الخواص دوريًا حسب العدد الذري'],['الدورة','صف أفقي في الجدول الدوري'],['المجموعة','عمود رأسي في الجدول الدوري'],['أشباه الفلزات','عناصر لها خواص فلزية ولافلزية']],
+ tf:[['ترك مندليف فراغات لعناصر لم تكن مكتشفة.',1,''],['رُتب الجدول الدوري الحديث حسب الكتلة الذرية.',0,'رُتب حسب العدد الذري.'],['عناصر المجموعة 1 تسمى الفلزات القلوية.',1,''],['عناصر المجموعة 17 تسمى الهالوجينات.',1,''],['تقع معظم الفلزات في يمين الجدول الدوري.',0,'تقع في يسار الجدول ووسطه.'],['عناصر المجموعة 18 تسمى الغازات النبيلة.',1,''],['الفلزات رديئة التوصيل للكهرباء.',0,'الفلزات جيدة التوصيل.'],['يتكون الجدول الدوري من دورات ومجموعات.',1,'']]},
+c22:{ch:2,name:'تصنيف العناصر',
+ cls:{a:'الفئة s',b:'الفئة p',items:[['الصوديوم Na','a'],['الكلور Cl','b'],['الكالسيوم Ca','a'],['الأكسجين O','b'],['البوتاسيوم K','a'],['الألومنيوم Al','b'],['المغنيسيوم Mg','a'],['النيون Ne','b']]},
+ mem:[['الفئة s','المجموعتان 1 و2'],['الفئة p','المجموعات من 13 إلى 18'],['الفئة d','العناصر الانتقالية'],['الفئة f','العناصر الانتقالية الداخلية'],['رقم الدورة','رقم مستوى الطاقة الخارجي'],['تشابه خواص المجموعة','تساوي عدد إلكترونات التكافؤ']],
+ tf:[['تتشابه خواص عناصر المجموعة الواحدة لتساوي عدد إلكترونات تكافئها.',1,''],['تقع العناصر الانتقالية في الفئة s.',0,'تقع في الفئة d.'],['رقم الدورة يساوي رقم مستوى الطاقة الخارجي.',1,''],['العناصر الانتقالية الداخلية في الفئة f.',1,''],['جميع الغازات النبيلة لها ثمانية إلكترونات تكافؤ.',0,'الهيليوم له إلكترونا تكافؤ فقط.'],['الفئة p تضم ست مجموعات.',1,''],['للعناصر في الدورة الواحدة العدد نفسه من إلكترونات التكافؤ.',0,'يتساوى في المجموعة الواحدة لا الدورة.'],['ينتهي توزيع عناصر الفئة p بالمستوى الفرعي p.',1,'']]},
+c23:{ch:2,name:'تدرج خواص العناصر',
+ cls:{a:'تزداد عبر الدورة',b:'تقل عبر الدورة',items:[['طاقة التأين','a'],['نصف القطر الذري','b'],['الكهروسالبية','a'],['الخواص الفلزية','b'],['شحنة النواة الفعالة','a'],['سهولة فقد الإلكترونات','b'],['الميل لاكتساب الإلكترونات','a'],['حجم الذرة','b']]},
+ mem:[['نصف القطر الذري','نصف المسافة بين نواتي ذرتين متماثلتين'],['طاقة التأين','الطاقة اللازمة لنزع إلكترون من ذرة غازية'],['الكهروسالبية','قدرة الذرة على جذب إلكترونات الرابطة'],['قاعدة الثمانية','الوصول إلى ثمانية إلكترونات تكافؤ'],['الأيون الموجب','أصغر من ذرته'],['الأيون السالب','أكبر من ذرته']],
+ tf:[['يزداد نصف القطر الذري في المجموعة من أعلى إلى أسفل.',1,''],['الفلور أقل العناصر كهروسالبية.',0,'الفلور أعلى العناصر كهروسالبية.'],['تقل طاقة التأين في المجموعة من أعلى إلى أسفل.',1,''],['نصف قطر الأيون الموجب أكبر من نصف قطر ذرته.',0,'أصغر لأنه فقد إلكترونات.'],['تميل الفلزات إلى فقد الإلكترونات.',1,''],['يقل نصف القطر الذري عبر الدورة بسبب زيادة شحنة النواة.',1,''],['للغازات النبيلة طاقة تأين منخفضة جدًا.',0,'طاقة تأينها مرتفعة لأنها مستقرة.'],['تكتسب اللافلزات الإلكترونات لتحقق قاعدة الثمانية.',1,'']]},
+c31:{ch:3,name:'تكوّن الأيون',
+ cls:{a:'أيون موجب',b:'أيون سالب',items:[['Na⁺','a'],['Cl⁻','b'],['Mg²⁺','a'],['O²⁻','b'],['Ca²⁺','a'],['S²⁻','b'],['Al³⁺','a'],['F⁻','b']]},
+ mem:[['الرابطة الكيميائية','قوة تربط ذرتين معًا'],['الأيون الموجب','ذرة فقدت إلكترونًا أو أكثر'],['الأيون السالب','ذرة اكتسبت إلكترونًا أو أكثر'],['Na⁺','له توزيع النيون'],['Cl⁻','له توزيع الأرجون'],['قاعدة الثمانية','سبب فقد الإلكترونات أو اكتسابها']],
+ tf:[['تكوّن الفلزات أيونات موجبة غالبًا.',1,''],['تكوّن اللافلزات أيونات موجبة غالبًا.',0,'تكوّن أيونات سالبة لأنها تكتسب الإلكترونات.'],['أيون المغنيسيوم Mg²⁺.',1,''],['أيون الأكسجين O²⁺.',0,'أيون الأكسجين O²⁻.'],['للأيون Na⁺ توزيع إلكتروني يشبه النيون.',1,''],['أيون الكلوريد أكبر من ذرة الكلور.',1,''],['الأيون الموجب نتج عن اكتساب إلكترونات.',0,'نتج عن فقد إلكترونات.'],['تصل الذرات بتكوين الأيونات إلى توزيع الغاز النبيل.',1,'']]},
+c32:{ch:3,name:'الروابط الأيونية والمركبات الأيونية',
+ cls:{a:'من خواص المركبات الأيونية',b:'ليست من خواصها',items:[['درجة انصهار مرتفعة','a'],['لينة وقابلة للطرق','b'],['توصل الكهرباء مذابة في الماء','a'],['توصل الكهرباء وهي صلبة','b'],['صلبة وهشة','a'],['درجة غليان منخفضة','b'],['تكوّن شبكة بلورية','a'],['تتكون من جزيئات منفصلة','b']]},
+ mem:[['الرابطة الأيونية','تجاذب بين أيونات مختلفة الشحنة'],['المركب الأيوني','مركب يحتوي على روابط أيونية'],['الشبكة البلورية','ترتيب ثلاثي الأبعاد منتظم للأيونات'],['الإلكتروليت','مركب يوصل محلوله الكهرباء'],['طاقة الشبكة','الطاقة اللازمة لفصل أيونات مول من المركب'],['المركبات الثنائية','مركبات أيونية من عنصرين']],
+ tf:[['تنشأ الرابطة الأيونية بين فلز ولافلز.',1,''],['المركب الأيوني مشحون بشحنة موجبة.',0,'المركب الأيوني متعادل كهربائيًا.'],['كلما زادت طاقة الشبكة زادت قوة الرابطة.',1,''],['يوصل ملح الطعام الصلب الكهرباء.',0,'يوصلها مذابًا أو منصهرًا فقط.'],['المركبات الأيونية هشة.',1,''],['طاقة الشبكة لـ MgO أكبر من NaCl.',1,''],['درجات انصهار المركبات الأيونية منخفضة.',0,'درجات انصهارها مرتفعة.'],['تكوّن الرابطة الأيونية يطلق طاقة.',1,'']]},
+c33:{ch:3,name:'صيغ المركبات الأيونية وأسماؤها',
+ cls:{a:'أيون أحادي الذرة',b:'أيون عديد الذرات',items:[['Cl⁻','a'],['SO₄²⁻','b'],['Na⁺','a'],['NO₃⁻','b'],['O²⁻','a'],['OH⁻','b'],['Ca²⁺','a'],['NH₄⁺','b']]},
+ mem:[['NaCl','كلوريد الصوديوم'],['MgO','أكسيد المغنيسيوم'],['CaCO₃','كربونات الكالسيوم'],['Al₂O₃','أكسيد الألومنيوم'],['KNO₃','نترات البوتاسيوم'],['MgCl₂','كلوريد المغنيسيوم']],
+ tf:[['مجموع شحنات الأيونات في المركب الأيوني صفر.',1,''],['يُكتب الأيون السالب أولًا في الصيغة.',0,'يُكتب الأيون الموجب أولًا.'],['صيغة كلوريد الكالسيوم CaCl₂.',1,''],['أيون الكبريتات SO₃²⁻.',0,'أيون الكبريتات SO₄²⁻.'],['NH₄⁺ أيون الأمونيوم.',1,''],['وحدة الصيغة أبسط نسبة للأيونات في المركب.',1,''],['تُكتب الأقواس حول الأيون عديد الذرات إذا تكرر.',1,''],['اسم NaOH كلوريد الصوديوم.',0,'اسمه هيدروكسيد الصوديوم.']]},
+c34:{ch:3,name:'الروابط الفلزية وخواص الفلزات',
+ cls:{a:'خاصية فلزية',b:'ليست خاصية فلزية',items:[['قابلية الطرق','a'],['الهشاشة','b'],['التوصيل الكهربائي','a'],['رداءة توصيل الحرارة','b'],['اللمعان','a'],['قابلية السحب','a'],['عدم التوصيل وهي صلبة','b'],['درجة انصهار منخفضة جدًا','b']]},
+ mem:[['الرابطة الفلزية','تجاذب أيونات موجبة مع إلكترونات حرة'],['بحر الإلكترونات','إلكترونات تكافؤ تتحرك بحرية'],['السبيكة','مخلوط عنصرين أو أكثر أحدهما فلز'],['الفولاذ','سبيكة من الحديد والكربون'],['قابلية الطرق','التشكيل على هيئة صفائح'],['قابلية السحب','التشكيل على هيئة أسلاك']],
+ tf:[['توصل الفلزات الكهرباء بسبب حركة الإلكترونات الحرة.',1,''],['الفلزات هشة وتنكسر عند الطرق.',0,'الفلزات قابلة للطرق والسحب.'],['السبيكة قد تكون أصلب من الفلز النقي.',1,''],['الرابطة الفلزية بين أيونات موجبة وأيونات سالبة.',0,'بين أيونات موجبة وإلكترونات حرة.'],['الفولاذ سبيكة.',1,''],['النحاس يُستعمل في الأسلاك لجودة توصيله.',1,''],['الإلكترونات في الفلز ثابتة في أماكنها.',0,'تتحرك بحرية في بحر الإلكترونات.'],['للفلزات الانتقالية درجات انصهار مرتفعة غالبًا.',1,'']]},
+c41:{ch:4,name:'الرابطة التساهمية',
+ cls:{a:'رابطة تساهمية',b:'رابطة أيونية',items:[['H₂','a'],['NaCl','b'],['H₂O','a'],['MgO','b'],['CO₂','a'],['KBr','b'],['CH₄','a'],['CaF₂','b']]},
+ mem:[['الرابطة التساهمية','مشاركة الذرات في الإلكترونات'],['الجزيء','ذرتان أو أكثر برابطة تساهمية'],['الرابطة الثنائية','مشاركة زوجين من الإلكترونات'],['الرابطة الثلاثية','مشاركة ثلاثة أزواج من الإلكترونات'],['رابطة سيجما','تداخل رأسي بين المستويات'],['رابطة باي','تداخل جانبي بين المستويات']],
+ tf:[['تنشأ الرابطة التساهمية عادة بين لافلزين.',1,''],['الرابطة الثلاثية أطول من الأحادية.',0,'كلما زاد عدد الروابط قصر طولها.'],['الرابطة في N₂ ثلاثية.',1,''],['تحتوي الرابطة الأحادية على رابطة باي.',0,'الرابطة الأحادية سيجما فقط.'],['يكوّن الكربون أربع روابط تساهمية عادة.',1,''],['كلما قصر طول الرابطة زادت قوتها.',1,''],['يتطلب كسر الرابطة التساهمية إطلاق طاقة.',0,'كسر الرابطة يحتاج إلى امتصاص طاقة.'],['الرابطة الثنائية تتكون من رابطة سيجما ورابطة باي.',1,'']]},
+c42:{ch:4,name:'تسمية الجزيئات',
+ cls:{a:'مركب جزيئي',b:'حمض',items:[['CO₂','a'],['HCl في الماء','b'],['CO','a'],['H₂SO₄','b'],['N₂O','a'],['HNO₃','b'],['SO₂','a'],['H₂CO₃','b']]},
+ mem:[['CO₂','ثاني أكسيد الكربون'],['CO','أول أكسيد الكربون'],['HCl','حمض الهيدروكلوريك'],['H₂SO₄','حمض الكبريتيك'],['HNO₃','حمض النيتريك'],['SO₂','ثاني أكسيد الكبريت']],
+ tf:[['يتكون المركب الجزيئي الثنائي من عنصرين لافلزيين.',1,''],['تدل البادئة «ثاني» على ثلاث ذرات.',0,'تدل على ذرتين.'],['H₂SO₄ حمض الكبريتيك.',1,''],['CO أول أكسيد الكربون.',1,''],['HNO₃ حمض الهيدروكلوريك.',0,'HNO₃ حمض النيتريك.'],['تُستعمل البادئات لتسمية المركبات الأيونية الثنائية.',0,'تُستعمل البادئات للمركبات الجزيئية.'],['ينتج الحمض أيونات H⁺ في الماء.',1,''],['SO₂ ثاني أكسيد الكبريت.',1,'']]},
+c43:{ch:4,name:'التراكيب الجزيئية',
+ cls:{a:'يتبع قاعدة الثمانية',b:'استثناء من القاعدة',items:[['CH₄','a'],['BF₃','b'],['H₂O','a'],['PCl₅','b'],['NH₃','a'],['NO₂','b'],['CO₂','a'],['SF₆','b']]},
+ mem:[['تركيب لويس','رسم يوضح الأزواج الرابطة وغير الرابطة'],['الذرة المركزية','غالبًا الأقل كهروسالبية'],['الرنين','أكثر من تركيب لويس صحيح للجزيء'],['زوج غير رابط','زوج إلكترونات لا يشارك في الرابطة'],['الرابطة التساهمية التناسقية','تقدم ذرة واحدة زوجي الإلكترونات'],['تمدد الثمانية','أكثر من ثمانية إلكترونات حول الذرة المركزية']],
+ tf:[['لا يكون الهيدروجين ذرة مركزية.',1,''],['جميع الجزيئات تتبع قاعدة الثمانية.',0,'هناك استثناءات مثل BF₃ و PCl₅.'],['لجزيء الأوزون تراكيب رنين.',1,''],['في تركيب لويس للماء زوجان غير رابطين على الأكسجين.',1,''],['يحيط بالبورون في BF₃ ثمانية إلكترونات.',0,'يحيط به ستة إلكترونات فقط.'],['عدد إلكترونات التكافؤ الكلي في H₂O ثمانية.',1,''],['يمثل تركيب لويس إلكترونات التكافؤ فقط.',1,''],['في الرنين تنتقل الذرات من مكان لآخر.',0,'تتغير مواضع الإلكترونات لا الذرات.']]},
+c44:{ch:4,name:'أشكال الجزيئات',
+ cls:{a:'شكل خطي',b:'ليس خطيًا',items:[['CO₂','a'],['H₂O','b'],['BeCl₂','a'],['CH₄','b'],['HCl','a'],['NH₃','b'],['N₂','a'],['BF₃','b']]},
+ mem:[['نظرية VSEPR','تنافر أزواج الإلكترونات يحدد الشكل'],['خطي','زاوية 180° مثل CO₂'],['رباعي الأوجه','زاوية 109.5° مثل CH₄'],['هرمي ثلاثي','مثل NH₃'],['منحنٍ','مثل H₂O'],['التهجين','خلط المستويات لتكوين مستويات متماثلة']],
+ tf:[['أزواج الإلكترونات غير الرابطة تقلل زاوية الرابطة.',1,''],['شكل جزيء الماء خطي.',0,'شكله منحنٍ.'],['تهجين الكربون في CH₄ هو sp³.',1,''],['شكل BF₃ مثلث مستوٍ.',1,''],['زاوية الرابطة في CO₂ تساوي 109.5°.',0,'تساوي 180°.'],['شكل NH₃ هرمي ثلاثي.',1,''],['تتنافر أزواج الإلكترونات فتبتعد أقصى ما يمكن.',1,''],['التهجين sp ينتج شكلًا رباعي الأوجه.',0,'التهجين sp ينتج شكلًا خطيًا.']]},
+c45:{ch:4,name:'الكهروسالبية والقطبية',
+ cls:{a:'جزيء قطبي',b:'جزيء غير قطبي',items:[['H₂O','a'],['CO₂','b'],['NH₃','a'],['CH₄','b'],['HCl','a'],['H₂','b'],['HF','a'],['O₂','b']]},
+ mem:[['الكهروسالبية','قدرة الذرة على جذب إلكترونات الرابطة'],['رابطة غير قطبية','مشاركة متساوية في الإلكترونات'],['رابطة قطبية','مشاركة غير متساوية وشحنات جزئية'],['δ−','شحنة جزئية على الذرة الأعلى كهروسالبية'],['الشبيه يذيب الشبيه','المواد القطبية تذوب في المذيبات القطبية'],['الفلور','أعلى العناصر كهروسالبية']],
+ tf:[['يمكن أن يكون الجزيء غير قطبي رغم احتوائه على روابط قطبية.',1,''],['يذوب الزيت في الماء بسهولة.',0,'الزيت غير قطبي والماء قطبي.'],['الرابطة في H₂ غير قطبية.',1,''],['كلما زاد فرق الكهروسالبية زادت قطبية الرابطة.',1,''],['جزيء CO₂ قطبي.',0,'شكله الخطي المتماثل يلغي القطبية.'],['تكون الشحنة الجزئية السالبة على الذرة الأعلى كهروسالبية.',1,''],['جزيء الماء غير قطبي.',0,'جزيء الماء قطبي بسبب شكله المنحني.'],['الصابون له طرف قطبي وطرف غير قطبي.',1,'']]}
+};
+const CH={1:'الفصل الأول: الإلكترونات في الذرات',2:'الفصل الثاني: الجدول الدوري',3:'الفصل الثالث: المركبات الأيونية والفلزات',4:'الفصل الرابع: الروابط التساهمية'};
+const GAMES=[
+ {id:'cls',name:'صنّفي',hint:'ضعي كل بطاقة في مكانها الصحيح',ic:'⇄',col:'var(--blue)'},
+ {id:'mem',name:'بطاقات الذاكرة',hint:'طابقي المصطلح مع معناه',ic:'?',col:'var(--lilac)'},
+ {id:'tf',name:'صح أم خطأ؟',hint:'أجيبي قبل انتهاء الوقت',ic:'✓',col:'var(--mint)'}];
+const $=id=>document.getElementById(id);
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let L=null,G='cls',sound=true,tick=null;
+try{const h=(location.hash||'').slice(1);if(D[h])L=h;}catch(e){}
+if(!L)L='c11';
+
+/* sound & voice */
+let actx=null;
+function beep(ok){if(!sound)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.connect(g);g.connect(actx.destination);
+ o.frequency.value=ok?660:200;o.type=ok?'sine':'square';g.gain.setValueAtTime(.12,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.3);o.start();o.stop(actx.currentTime+.3);
+ if(ok){const o2=actx.createOscillator(),g2=actx.createGain();o2.connect(g2);g2.connect(actx.destination);o2.frequency.value=880;g2.gain.setValueAtTime(.1,actx.currentTime+.12);g2.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.45);o2.start(actx.currentTime+.12);o2.stop(actx.currentTime+.45);}}catch(e){}}
+let lastSay=0;
+function say(t){if(!sound)return;try{const n=Date.now();if(n-lastSay<900)return;lastSay=n;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ar-SA';u.rate=1;speechSynthesis.speak(u);}catch(e){}}
+const praise=['أحسنتِ رائعة','ممتاز','إجابة صحيحة'];
+function good(){beep(true);say(praise[Math.floor(Math.random()*praise.length)]);}
+function bad(){beep(false);say('حاولي مرة أخرى');}
+
+/* nav */
+function rail(){
+ $('rail').innerHTML=[1,2,3,4].map(c=>`<div class="chap"><b>${CH[c]}</b>${Object.keys(D).filter(k=>D[k].ch===c).map(k=>`<button type="button" class="lesson" data-l="${k}" aria-pressed="${k===L}">${D[k].name}</button>`).join('')}</div>`).join('');
+ $('rail').querySelectorAll('.lesson').forEach(b=>b.onclick=()=>{L=b.dataset.l;try{history.replaceState(null,'','#'+L);}catch(e){}rail();start();});
+}
+function games(){
+ $('games').innerHTML=GAMES.map(g=>`<button type="button" class="gtile" data-g="${g.id}" aria-pressed="${g.id===G}"><span class="ic" style="background:${g.col}">${g.ic}</span><span><b>${g.name}</b><small>${g.hint}</small></span></button>`).join('');
+ $('games').querySelectorAll('.gtile').forEach(b=>b.onclick=()=>{G=b.dataset.g;games();start();});
+}
+function head(extra){const g=GAMES.find(x=>x.id===G);return `<div class="ahead"><h2>${g.name}<small>${D[L].name}</small></h2><div class="stats" id="stats">${extra||''}</div></div>`;}
+function start(){clearInterval(tick);({cls:playCls,mem:playMem,tf:playTF})[G]();}
+
+function finish(score,total,line){
+ clearInterval(tick);
+ const p=total?score/total:0,st=p>=.9?3:p>=.6?2:p>0?1:0;
+ const msg=st===3?'أداء رائع!':st===2?'أحسنتِ!':'بداية جيدة، حاولي مرة أخرى';
+ $('arena').innerHTML=head()+`<div class="end pop"><div class="stars">${[0,1,2].map(i=>i<st?'★':'<span class="off">★</span>').join('')}</div><h3>${msg}</h3><p>${line}</p>
+ <div class="row"><button type="button" class="primary" id="again">العبي مرة أخرى</button><button type="button" id="other">لعبة أخرى</button></div></div>`;
+ if(st>=2)say('أحسنتِ رائعة');
+ $('again').onclick=start;
+ $('other').onclick=()=>{const i=GAMES.findIndex(x=>x.id===G);G=GAMES[(i+1)%3].id;games();start();};
+}
+
+/* classify */
+function playCls(){
+ const c=D[L].cls,items=sh(c.items);let i=0,ok=0,wrong=0,lock=false;
+ const placed={a:[],b:[]};
+ function draw(){
+  if(i>=items.length)return finish(ok,items.length,`صنّفتِ ${ok} من ${items.length} تصنيفًا صحيحًا من المحاولة الأولى`);
+  $('arena').innerHTML=head(`<span class="stat ok">صحيح ${ok}</span><span class="stat bad">خطأ ${wrong}</span><span class="stat">${i+1} / ${items.length}</span>`)+
+  `<div class="prog"><i style="width:${i/items.length*100}%"></i></div>
+   <div class="item pop" id="it">${esc(items[i][0])}</div>
+   <div class="buckets">${['a','b'].map((k,n)=>`<button type="button" class="bucket" data-k="${k}"><span class="bt" style="background:${n?'var(--coral)':'var(--blue)'}">${esc(c[k])}</span><span class="in">${placed[k].map(t=>`<span>${esc(t)}</span>`).join('')}</span></button>`).join('')}</div>
+   <p class="why" id="why">اضغطي على المجموعة المناسبة</p>`;
+  let first=true;
+  $('arena').querySelectorAll('.bucket').forEach(b=>b.onclick=()=>{
+   if(lock)return;const it=$('it'),why=$('why');
+   if(b.dataset.k===items[i][1]){lock=true;if(first)ok++;good();it.className='item ok';why.className='why ok';why.textContent='صحيح!';placed[b.dataset.k].push(items[i][0]);setTimeout(()=>{i++;lock=false;draw();},800);}
+   else{if(first){wrong++;first=false;}bad();it.className='item';void it.offsetWidth;it.className='item bad';why.className='why bad';why.textContent='ليست هنا، جرّبي المجموعة الأخرى';
+    const s=$('stats').children[1];if(s)s.textContent='خطأ '+wrong;}
+  });
+ }
+ draw();
+}
+
+/* memory */
+function playMem(){
+ const pairs=D[L].mem;let cards=[];pairs.forEach((p,k)=>{cards.push({k,t:p[0],term:1});cards.push({k,t:p[1],term:0});});cards=sh(cards);
+ let open=[],done=0,moves=0,lock=false;
+ $('arena').innerHTML=head(`<span class="stat" id="mv">المحاولات 0</span><span class="stat ok" id="dn">الأزواج 0 / ${pairs.length}</span>`)+
+ `<div class="grid">${cards.map((c,i)=>`<button type="button" class="mc" data-i="${i}" aria-label="بطاقة ${i+1}"><span class="b">?</span><span class="f${c.term?' term':''}">${esc(c.t)}</span></button>`).join('')}</div>
+  <p class="why" id="why">اقلبي بطاقتين: مصطلح ومعناه</p>`;
+ $('arena').querySelectorAll('.mc').forEach(el=>el.onclick=()=>{
+  if(lock||el.classList.contains('open'))return;el.classList.add('open');open.push(el);
+  if(open.length<2)return;
+  moves++;$('mv').textContent='المحاولات '+moves;
+  const [x,y]=open.map(e=>cards[+e.dataset.i]);
+  if(x.k===y.k&&x.term!==y.term){open.forEach(e=>e.classList.add('done'));open=[];done++;good();$('dn').textContent=`الأزواج ${done} / ${pairs.length}`;$('why').className='why ok';$('why').textContent=`${pairs[x.k][0]}: ${pairs[x.k][1]}`;
+   if(done===pairs.length)setTimeout(()=>{const best=pairs.length;finish(Math.max(0,best-Math.floor((moves-best)/2)),best,`أنهيتِ اللعبة في ${moves} محاولة (أقل عدد ممكن ${best})`);},1100);}
+  else{lock=true;bad();open.forEach(e=>e.classList.add('miss'));$('why').className='why bad';$('why').textContent='ليسا زوجًا متطابقًا';
+   setTimeout(()=>{open.forEach(e=>e.classList.remove('open','miss'));open=[];lock=false;},1000);}
+ });
+}
+
+/* true / false */
+function playTF(){
+ const qs=sh(D[L].tf),T=15;let i=0,ok=0;
+ function draw(){
+  if(i>=qs.length)return finish(ok,qs.length,`أجبتِ إجابة صحيحة عن ${ok} من ${qs.length} عبارات`);
+  $('arena').innerHTML=head(`<span class="stat ok">صحيح ${ok}</span><span class="stat">${i+1} / ${qs.length}</span>`)+
+  `<div class="timer"><i id="tm" style="width:100%"></i></div>
+   <div class="q pop">${esc(qs[i][0])}</div>
+   <div class="tfb"><button type="button" class="t" data-v="1">صح</button><button type="button" class="f" data-v="0">خطأ</button></div>
+   <p class="why" id="why"></p><button type="button" class="next primary" id="nx" hidden>التالي</button>`;
+  let left=T,answered=false;const tm=$('tm');
+  clearInterval(tick);tick=setInterval(()=>{left-=.1;tm.style.width=Math.max(0,left/T*100)+'%';if(left<=0){clearInterval(tick);answer(-1);}},100);
+  function answer(v){
+   if(answered)return;answered=true;clearInterval(tick);
+   const q=qs[i],right=v===q[1];if(right){ok++;good();}else bad();
+   $('arena').querySelectorAll('.tfb button').forEach(b=>{b.disabled=true;if(+b.dataset.v===q[1]){b.disabled=false;b.style.outline='4px solid var(--ok)';b.style.opacity='1';b.onclick=null;}});
+   const w=$('why');w.className='why '+(right?'ok':'bad');
+   w.textContent=(v===-1?'انتهى الوقت. ':'')+(right?'إجابة صحيحة. ':'الإجابة الصحيحة: '+(q[1]?'صح. ':'خطأ. '))+(q[2]||'');
+   const nx=$('nx');nx.hidden=false;nx.focus();nx.onclick=()=>{i++;draw();};
+  }
+  $('arena').querySelectorAll('.tfb button').forEach(b=>b.onclick=()=>answer(+b.dataset.v));
+ }
+ draw();
+}
+
+$('snd').onclick=e=>{sound=!sound;e.currentTarget.setAttribute('aria-pressed',sound);e.currentTarget.textContent='الصوت: '+(sound?'يعمل':'مغلق');try{if(!sound)speechSynthesis.cancel();}catch(x){}};
+$('fs').onclick=()=>{try{const d=document;if(d.fullscreenElement)d.exitFullscreen();else d.documentElement.requestFullscreen().catch(()=>{});}catch(e){}};
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(D[h]&&h!==L){L=h;rail();start();}});
+rail();games();start();
+})();
+</script>
+
+</body>
+</html>
